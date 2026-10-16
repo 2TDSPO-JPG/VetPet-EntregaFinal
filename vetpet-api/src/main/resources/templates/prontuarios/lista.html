@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Prontuários')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('prontuarios', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Prontuários</h1>
+            <p>Registros clínicos dos atendimentos concluídos, do mais recente para o mais antigo.</p>
+        </div>
+    </div>
+
+    <section class="painel">
+        <div class="tabela-wrapper" th:if="${pagina.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Atendimento</th>
+                    <th>Pet</th>
+                    <th>Diagnóstico</th>
+                    <th>Retorno</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="prontuario : ${pagina.content}">
+                    <td>
+                        <a th:href="@{/prontuarios/{id}(id=${prontuario.id})}"><strong th:text="${prontuario.tipoAtendimento.descricao}">Consulta</strong></a>
+                        <span class="secundario" th:text="|${#temporals.format(prontuario.dataAtendimento, 'dd/MM/yyyy')}, ${prontuario.veterinarioNome}|">Data</span>
+                    </td>
+                    <td><a th:href="@{/pets/{id}(id=${prontuario.petId})}" th:text="${prontuario.petNome}">Thor</a></td>
+                    <td th:text="${#strings.abbreviate(prontuario.diagnostico, 90)}">Diagnóstico</td>
+                    <td th:text="${prontuario.proximoRetorno != null} ? ${#temporals.format(prontuario.proximoRetorno, 'dd/MM/yyyy')} : 'Sem retorno'">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="vazio" th:if="${pagina.totalElements == 0}">
+            <strong>Nenhum prontuário registrado</strong>
+            Conclua um atendimento na <a th:href="@{/atendimentos}">agenda</a> para gerar o primeiro prontuário.
+        </div>
+        <div th:replace="~{fragments/layout :: paginacao(${pagina}, ${link})}"></div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>

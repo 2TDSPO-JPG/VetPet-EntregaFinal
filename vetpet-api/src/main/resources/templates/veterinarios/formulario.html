@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${veterinarioId == null} ? 'Novo veterinário' : 'Editar veterinário')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('veterinarios', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="${veterinarioId == null} ? 'Novo veterinário' : 'Editar veterinário'">Novo veterinário</h1>
+            <p>O e-mail e a senha cadastrados aqui dão acesso a este painel.</p>
+        </div>
+    </div>
+
+    <form class="painel formulario" method="post" th:object="${form}" novalidate
+          th:action="${veterinarioId == null} ? @{/veterinarios/novo} : @{/veterinarios/{id}/editar(id=${veterinarioId})}">
+        <div class="secao-form" th:if="${#fields.hasGlobalErrors()}">
+            <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+        </div>
+        <section class="secao-form">
+            <h2>Dados profissionais</h2>
+            <div class="campos">
+                <div th:replace="~{fragments/layout :: entrada('crmv', 'CRMV', 'text', 'campo-2')}"></div>
+                <div th:replace="~{fragments/layout :: entrada('especialidade', 'Especialidade', 'text', 'campo-2')}"></div>
+                <div th:replace="~{fragments/layout :: entrada('anosExperiencia', 'Anos de experiência', 'number', 'campo-2')}"></div>
+                <div th:replace="~{fragments/layout :: texto('biografia', 'Biografia', 'campo-6')}"></div>
+            </div>
+        </section>
+        <th:block th:replace="~{fragments/pessoa :: dadosPessoais(${veterinarioId == null}, 'Senha de acesso ao painel')}"></th:block>
+        <div class="rodape-form">
+            <a class="botao botao-secundario" th:href="@{/veterinarios}">Cancelar</a>
+            <button type="submit" class="botao" th:text="${veterinarioId == null} ? 'Cadastrar veterinário' : 'Salvar alterações'">Salvar</button>
+        </div>
+    </form>
+</main>
+</th:block>
+</body>
+</html>

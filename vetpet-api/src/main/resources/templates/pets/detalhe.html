@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${pet.nome})}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('pets', ~{::main})}">
+<main th:with="saude=${acompanhamento.situacaoSaude}">
+    <section class="painel ficha-pet">
+        <span class="pulso" th:classappend="|pulso-${saude.estilo}|" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+        </span>
+        <div>
+            <h1 th:text="${pet.nome}">Thor</h1>
+            <div class="meta">
+                <span th:text="${pet.especie.descricao}">Cachorro</span><th:block th:if="${pet.raca != null}">, <span th:text="${pet.raca}">Golden</span></th:block><th:block th:if="${pet.sexo != null}">, <span th:text="${pet.sexo.descricao}">Macho</span></th:block>,
+                <span th:text="${pet.idade == 1} ? '1 ano' : |${pet.idade} anos|">5 anos</span><th:block th:if="${pet.pesoKg != null}">,
+                <span th:text="|${#numbers.formatDecimal(pet.pesoKg, 1, 'POINT', 2, 'COMMA')} kg|">32 kg</span></th:block>
+            </div>
+            <div class="meta">Código <span class="codigo" th:text="${pet.petCode}">PET-0000</span></div>
+        </div>
+        <div class="saude-resumo">
+            <span class="etiqueta" th:classappend="|saude-${saude.estilo}|" th:text="${saude.descricao}">Em dia</span>
+            <small th:if="${acompanhamento.ultimoAtendimento != null}"
+                   th:text="|Último atendimento em ${#temporals.format(acompanhamento.ultimoAtendimento, 'dd/MM/yyyy')}|">Último</small>
+            <small th:if="${acompanhamento.proximoAtendimento != null}"
+                   th:text="|Próximo: ${#temporals.format(acompanhamento.proximoAtendimento.dataHora, 'dd/MM HH:mm')}, ${acompanhamento.proximoAtendimento.tipo.descricao}|">Próximo</small>
+            <small th:if="${saude.estilo == 'alerta' and acompanhamento.proximoAtendimento == null}">Agende um check-up.</small>
+        </div>
+    </section>
+
+    <div class="cabecalho" style="margin-bottom:1.25rem">
+        <div class="acoes">
+            <a class="botao" th:href="@{/atendimentos/novo(petId=${pet.id})}">Agendar atendimento</a>
+            <a class="botao botao-secundario" th:href="@{/pets/{id}/editar(id=${pet.id})}">Editar dados</a>
+        </div>
+        <form th:action="@{/pets/{id}/excluir(id=${pet.id})}" method="post"
+              th:attr="data-confirmar=|Excluir ${pet.nome}? Todo o histórico, atendimentos e prontuários serão apagados.|">
+            <button type="submit" class="botao botao-perigo">Excluir pet</button>
+        </form>
+    </div>
+
+    <div class="grade grade-principal">
+        <section class="painel" data-abas>
+            <div class="abas" role="tablist" aria-label="Histórico do pet">
+                <button type="button" role="tab" id="tab-linha" aria-controls="aba-linha">Linha da vida</button>
+                <button type="button" role="tab" id="tab-atendimentos" aria-controls="aba-atendimentos"
+                        th:text="|Atendimentos (${#lists.size(acompanhamento.atendimentos)})|">Atendimentos</button>
+                <button type="button" role="tab" id="tab-prontuarios" aria-controls="aba-prontuarios"
+                        th:text="|Prontuários (${#lists.size(acompanhamento.prontuarios)})|">Prontuários</button>
+                <button type="button" role="tab" id="tab-perguntas" aria-controls="aba-perguntas"
+                        th:text="|Perguntas (${#lists.size(acompanhamento.perguntas)})|">Perguntas</button>
+            </div>
+
+            <div class="aba-conteudo" id="aba-linha" role="tabpanel" aria-labelledby="tab-linha">
+                <ol class="linha-vida" th:unless="${#lists.isEmpty(acompanhamento.linhaDoTempo)}">
+                    <li th:each="evento : ${acompanhamento.linhaDoTempo}" th:class="|evento-${evento.categoria}|">
+                        <time th:datetime="${evento.ocorridoEm}" th:text="${#temporals.format(evento.ocorridoEm, 'dd/MM/yyyy HH:mm')}">01/01/2026</time>
+                        <strong th:text="${evento.titulo}">Evento</strong>
+                        <p th:text="${evento.descricao}">Descrição</p>
+                    </li>
+                </ol>
+                <div class="vazio" th:if="${#lists.isEmpty(acompanhamento.linhaDoTempo)}">
+                    <strong>A história começa agora</strong>
+                    Os eventos aparecem aqui assim que são processados pela fila do RabbitMQ.
+                </div>
+            </div>
+
+            <div class="aba-conteudo" id="aba-atendimentos" role="tabpanel" aria-labelledby="tab-atendimentos" hidden>
+                <div class="tabela-wrapper" th:unless="${#lists.isEmpty(acompanhamento.atendimentos)}">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Atendimento</th>
+                            <th>Status</th>
+                            <th class="coluna-acoes"><span class="oculto-visual">Ações</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="exame : ${acompanhamento.atendimentos}">
+                            <td th:text="${#temporals.format(exame.dataHora, 'dd/MM/yyyy HH:mm')}">01/01</td>
+                            <td>
+                                <strong th:text="${exame.tipo.descricao}">Consulta</strong>
+                                <span class="secundario" th:text="${exame.veterinarioNome}">Ana</span>
+                            </td>
+                            <td><span class="etiqueta" th:classappend="|status-${exame.status}|" th:text="${exame.status.descricao}">Agendado</span></td>
+                            <td class="coluna-acoes">
+                                <th:block th:replace="~{atendimentos/acoes :: acoes(${exame}, |/pets/${pet.id}#aba-atendimentos|)}"></th:block>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="vazio" th:if="${#lists.isEmpty(acompanhamento.atendimentos)}">
+                    <strong>Nenhum atendimento ainda</strong>
+                    <a th:href="@{/atendimentos/novo(petId=${pet.id})}">Agende a primeira consulta</a>.
+                </div>
+            </div>
+
+            <div class="aba-conteudo" id="aba-prontuarios" role="tabpanel" aria-labelledby="tab-prontuarios" hidden>
+                <article class="registro" th:each="prontuario : ${acompanhamento.prontuarios}">
+                    <div class="registro-topo">
+                        <a th:href="@{/prontuarios/{id}(id=${prontuario.id})}"><strong th:text="${prontuario.tipoAtendimento.descricao}">Consulta</strong></a>
+                        <span th:text="|${#temporals.format(prontuario.dataAtendimento, 'dd/MM/yyyy')}, ${prontuario.veterinarioNome}|">Data</span>
+                    </div>
+                    <p th:text="${prontuario.diagnostico}">Diagnóstico</p>
+                    <p class="ajuda" th:if="${prontuario.prescricao != null}" th:text="|Prescrição: ${prontuario.prescricao}|">Prescrição</p>
+                </article>
+                <div class="vazio" th:if="${#lists.isEmpty(acompanhamento.prontuarios)}">
+                    <strong>Sem prontuários</strong>
+                    O prontuário é criado ao concluir um atendimento.
+                </div>
+            </div>
+
+            <div class="aba-conteudo" id="aba-perguntas" role="tabpanel" aria-labelledby="tab-perguntas" hidden>
+                <form class="registro" th:action="@{/pets/{id}/perguntas(id=${pet.id})}" method="post" th:object="${novaPergunta}">
+                    <label for="texto"><strong>Registrar dúvida de um tutor</strong></label>
+                    <div class="form-inline">
+                        <textarea th:field="*{texto}" rows="2" maxlength="1000" placeholder="Ex.: Posso mudar a ração do Thor?"></textarea>
+                        <button type="submit" class="botao">Registrar</button>
+                    </div>
+                </form>
+                <article class="registro" th:each="pergunta : ${acompanhamento.perguntas}">
+                    <div class="registro-topo">
+                        <strong th:text="${pergunta.autor} ?: 'Tutor'">Mariana</strong>
+                        <span th:text="${#temporals.format(pergunta.criadaEm, 'dd/MM/yyyy HH:mm')}">Data</span>
+                    </div>
+                    <p th:text="${pergunta.texto}">Pergunta</p>
+                    <div class="resposta" th:if="${pergunta.respondida}">
+                        <p th:text="${pergunta.resposta}">Resposta</p>
+                        <small class="ajuda" th:text="|Respondida por ${pergunta.respondidaPor} em ${#temporals.format(pergunta.respondidaEm, 'dd/MM/yyyy')}|">Respondida</small>
+                    </div>
+                    <form class="form-inline" th:unless="${pergunta.respondida}"
+                          th:action="@{/perguntas/{id}/responder(id=${pergunta.id})}" method="post">
+                        <label class="oculto-visual" th:for="|resposta-${pergunta.id}|">Resposta</label>
+                        <textarea th:id="|resposta-${pergunta.id}|" name="resposta" rows="2" maxlength="2000" required
+                                  placeholder="Escreva a resposta para o tutor"></textarea>
+                        <button type="submit" class="botao">Responder</button>
+                    </form>
+                    <form th:action="@{/perguntas/{id}/excluir(id=${pergunta.id})}" method="post"
+                          data-confirmar="Remover esta pergunta?" style="margin-top:.5rem">
+                        <button type="submit" class="botao botao-perigo botao-pequeno">Remover</button>
+                    </form>
+                </article>
+                <div class="vazio" th:if="${#lists.isEmpty(acompanhamento.perguntas)}">
+                    <strong>Nenhuma dúvida registrada</strong>
+                    As perguntas enviadas pelo app do tutor aparecem aqui.
+                </div>
+            </div>
+        </section>
+
+        <aside class="grade">
+            <section class="painel">
+                <div class="painel-titulo"><h2>Tutores</h2></div>
+                <div class="painel-corpo">
+                    <div class="chips">
+                        <span class="chip" th:each="tutor : ${pet.tutores}">
+                            <a th:href="@{/tutores/{id}(id=${tutor.id})}" th:text="${tutor.nome}">Mariana</a>
+                            <form th:action="@{/pets/{id}/tutores/{tutorId}/remover(id=${pet.id}, tutorId=${tutor.id})}" method="post"
+                                  th:attr="data-confirmar=|Desvincular ${tutor.nome} de ${pet.nome}?|">
+                                <button type="submit" th:attr="aria-label=|Desvincular ${tutor.nome}|">&times;</button>
+                            </form>
+                        </span>
+                    </div>
+                    <form class="form-inline" th:action="@{/pets/{id}/tutores(id=${pet.id})}" method="post">
+                        <label class="oculto-visual" for="tutorId">Vincular tutor</label>
+                        <select id="tutorId" name="tutorId" required>
+                            <option value="">Vincular outro tutor</option>
+                            <option th:each="tutor : ${tutores}" th:value="${tutor.id}" th:text="${tutor.nome}">Rafael</option>
+                        </select>
+                        <button type="submit" class="botao botao-secundario">Vincular</button>
+                    </form>
+                </div>
+            </section>
+            <section class="painel painel-corpo">
+                <h2>Ficha</h2>
+                <dl class="dados" style="margin-top:1rem">
+                    <div><dt>Nascimento</dt><dd th:text="${#temporals.format(pet.dataNascimento, 'dd/MM/yyyy')}">01/01/2020</dd></div>
+                    <div><dt>No VetPet desde</dt><dd th:text="${#temporals.format(pet.criadoEm, 'dd/MM/yyyy')}">01/01/2026</dd></div>
+                    <div style="grid-column:1/-1"><dt>Alergias e restrições</dt><dd th:text="${pet.alergias} ?: 'Nenhuma informada'">Nenhuma</dd></div>
+                </dl>
+            </section>
+        </aside>
+    </div>
+</main>
+</th:block>
+</body>
+</html>

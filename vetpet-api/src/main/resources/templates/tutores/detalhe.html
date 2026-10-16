@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${tutor.nome})}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('tutores', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="${tutor.nome}">Mariana Costa</h1>
+            <p th:text="|Tutor(a) desde ${#temporals.format(tutor.criadoEm, 'dd/MM/yyyy')}|">Tutor desde</p>
+        </div>
+        <div class="acoes">
+            <a class="botao botao-secundario" th:href="@{/tutores/{id}/editar(id=${tutor.id})}">Editar dados</a>
+            <form th:action="@{/tutores/{id}/excluir(id=${tutor.id})}" method="post"
+                  th:attr="data-confirmar=|Remover ${tutor.nome}? Os pets continuam cadastrados, apenas o vínculo é desfeito.|">
+                <button type="submit" class="botao botao-perigo">Remover tutor</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="grade grade-principal">
+        <section class="painel">
+            <div class="painel-titulo">
+                <h2>Pets</h2>
+                <a class="botao botao-pequeno" th:href="@{/pets/novo(tutorId=${tutor.id})}">Cadastrar pet</a>
+            </div>
+            <ul class="lista-simples" th:unless="${#lists.isEmpty(tutor.pets)}">
+                <li th:each="pet : ${tutor.pets}">
+                    <div>
+                        <a th:href="@{/pets/{id}(id=${pet.id})}"><strong th:text="${pet.nome}">Thor</strong></a>
+                        <span class="secundario" th:text="|${pet.especie.descricao}${pet.raca != null ? ', ' + pet.raca : ''}|">Cachorro</span>
+                    </div>
+                    <span class="codigo" th:text="${pet.petCode}">PET-0000</span>
+                </li>
+            </ul>
+            <div class="vazio" th:if="${#lists.isEmpty(tutor.pets)}">
+                <strong>Nenhum pet vinculado</strong>
+                Cadastre um pet ou vincule um existente pela página do pet.
+            </div>
+        </section>
+
+        <section class="painel painel-corpo">
+            <h2>Contato</h2>
+            <dl class="dados" style="margin-top:1rem">
+                <div><dt>E-mail</dt><dd th:text="${tutor.email}">email</dd></div>
+                <div><dt>Telefone</dt><dd th:text="${tutor.telefone} ?: 'Não informado'">telefone</dd></div>
+                <div><dt>CPF</dt><dd th:text="${tutor.cpf}">cpf</dd></div>
+                <div><dt>Último acesso ao app</dt>
+                    <dd th:text="${tutor.ultimoAcesso != null} ? ${#temporals.format(tutor.ultimoAcesso, 'dd/MM/yyyy HH:mm')} : 'Ainda não acessou'">-</dd></div>
+                <div style="grid-column:1/-1"><dt>Endereço</dt>
+                    <dd th:text="${tutor.endereco != null} ? ${tutor.endereco.resumo} : 'Não informado'">-</dd></div>
+            </dl>
+        </section>
+    </div>
+</main>
+</th:block>
+</body>
+</html>

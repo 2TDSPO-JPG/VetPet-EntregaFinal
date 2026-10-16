@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Acompanhamento contínuo de pets')}"></head>
+<body>
+<div class="inicio">
+    <header class="inicio-topo">
+        <a class="marca" th:href="@{/}">
+            <img th:src="@{/favicon/faviconVetPet.jpg}" alt="">
+            Vet<span>Pet</span>
+        </a>
+        <a class="botao botao-secundario" th:href="@{/login}">Entrar</a>
+    </header>
+
+    <section class="inicio-hero">
+        <div>
+            <h1>Cada consulta vira parte da história do pet.</h1>
+            <p>O VetPet reúne cadastro, agenda, prontuário e dúvidas dos tutores em uma linha da vida contínua.
+                A clínica sabe quem está com o check-up atrasado e o tutor é avisado a cada passo.</p>
+            <a class="botao" th:href="@{/login}">Acessar o painel da clínica</a>
+        </div>
+
+        <div class="cartao-vida" aria-label="Exemplo da linha da vida de um pet">
+            <div class="cartao-vida-topo">
+                <span class="pulso pulso-ok">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+                </span>
+                <div>
+                    <h2>Thor, Golden Retriever</h2>
+                    <span class="etiqueta saude-ok">Acompanhamento em dia</span>
+                </div>
+            </div>
+            <ol class="linha-vida">
+                <li class="evento-exame">
+                    <time>Daqui a 2 dias</time>
+                    <strong>Retorno agendado</strong>
+                    <p>Reavaliação dentária com a Dra. Ana Ribeiro.</p>
+                </li>
+                <li class="evento-prontuario">
+                    <time>Há 2 meses</time>
+                    <strong>Check-up anual concluído</strong>
+                    <p>Saudável, 32,5 kg. Escovação diária recomendada.</p>
+                </li>
+                <li class="evento-pergunta">
+                    <time>Há 2 meses</time>
+                    <strong>Dúvida respondida</strong>
+                    <p>"Posso trocar a ração?" respondida pela equipe.</p>
+                </li>
+                <li class="evento-pet">
+                    <time>Maio de 2019</time>
+                    <strong>Entrou para o VetPet</strong>
+                    <p>Código PET-7F3A21C9, dois tutores vinculados.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="inicio-pilares">
+        <div>
+            <h2>Linha da vida</h2>
+            <p>Agendamentos, prontuários e perguntas viram eventos na história de cada pet, em ordem.</p>
+        </div>
+        <div>
+            <h2>Avisos automáticos</h2>
+            <p>Eventos publicados no RabbitMQ chegam ao serviço de notificações, que avisa os tutores.</p>
+        </div>
+        <div>
+            <h2>Check-up em dia</h2>
+            <p>Pets sem atendimento há mais de 12 meses ficam sinalizados para a equipe agir.</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${petId == null} ? 'Novo pet' : 'Editar pet')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('pets', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="${petId == null} ? 'Novo pet' : 'Editar pet'">Novo pet</h1>
+            <p>O código do pet é gerado automaticamente e a idade é calculada pela data de nascimento.</p>
+        </div>
+    </div>
+
+    <form class="painel formulario" method="post" th:object="${form}" novalidate
+          th:action="${petId == null} ? @{/pets/novo} : @{/pets/{id}/editar(id=${petId})}">
+        <div class="secao-form" th:if="${#fields.hasGlobalErrors()}">
+            <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+        </div>
+        <section class="secao-form">
+            <h2>Sobre o pet</h2>
+            <div class="campos">
+                <div th:replace="~{fragments/layout :: entrada('nome', 'Nome', 'text', 'campo-3')}"></div>
+                <div th:replace="~{fragments/layout :: entrada('dataNascimento', 'Data de nascimento', 'date', 'campo-3')}"></div>
+                <div class="campo campo-2" th:classappend="${#fields.hasErrors('especie')} ? 'campo-erro'">
+                    <label for="especie">Espécie</label>
+                    <select th:field="*{especie}">
+                        <option value="">Selecione</option>
+                        <option th:each="especie : ${especies}" th:value="${especie}" th:text="${especie.descricao}">Cachorro</option>
+                    </select>
+                    <span class="erro-campo" th:if="${#fields.hasErrors('especie')}" th:errors="*{especie}">Erro</span>
+                </div>
+                <div th:replace="~{fragments/layout :: entrada('raca', 'Raça', 'text', 'campo-2')}"></div>
+                <div class="campo campo-2">
+                    <label for="sexo">Sexo</label>
+                    <select th:field="*{sexo}">
+                        <option value="">Não informado</option>
+                        <option th:each="sexo : ${sexos}" th:value="${sexo}" th:text="${sexo.descricao}">Macho</option>
+                    </select>
+                </div>
+                <div class="campo campo-2" th:classappend="${#fields.hasErrors('pesoKg')} ? 'campo-erro'">
+                    <label for="pesoKg">Peso (kg)</label>
+                    <input type="number" step="0.01" min="0" th:field="*{pesoKg}">
+                    <span class="erro-campo" th:if="${#fields.hasErrors('pesoKg')}" th:errors="*{pesoKg}">Erro</span>
+                </div>
+                <div th:replace="~{fragments/layout :: texto('alergias', 'Alergias e restrições', 'campo-4')}"></div>
+            </div>
+        </section>
+        <section class="secao-form">
+            <h2>Tutores responsáveis</h2>
+            <p>Todos os tutores marcados recebem os avisos sobre o pet.</p>
+            <div class="campo campo-6" th:classappend="${#fields.hasErrors('tutoresIds')} ? 'campo-erro'" style="margin-top:1rem">
+                <div class="lista-escolha" th:unless="${#lists.isEmpty(tutores)}">
+                    <label th:each="tutor : ${tutores}">
+                        <input type="checkbox" th:field="*{tutoresIds}" th:value="${tutor.id}">
+                        <span th:text="${tutor.nome}">Mariana</span>
+                    </label>
+                </div>
+                <p class="ajuda" th:if="${#lists.isEmpty(tutores)}">
+                    Nenhum tutor cadastrado ainda. <a th:href="@{/tutores/novo}">Cadastre um tutor</a> antes do pet.
+                </p>
+                <span class="erro-campo" th:if="${#fields.hasErrors('tutoresIds')}" th:errors="*{tutoresIds}">Erro</span>
+            </div>
+        </section>
+        <div class="rodape-form">
+            <a class="botao botao-secundario" th:href="${petId == null} ? @{/pets} : @{/pets/{id}(id=${petId})}">Cancelar</a>
+            <button type="submit" class="botao" th:text="${petId == null} ? 'Cadastrar pet' : 'Salvar alterações'">Salvar</button>
+        </div>
+    </form>
+</main>
+</th:block>
+</body>
+</html>

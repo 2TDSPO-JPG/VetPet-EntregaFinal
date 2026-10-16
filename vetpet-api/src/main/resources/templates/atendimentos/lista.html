@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Atendimentos')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('atendimentos', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Atendimentos</h1>
+            <p>Consultas, vacinas, exames e cirurgias. Concluir um atendimento gera o prontuário do pet.</p>
+        </div>
+        <a class="botao" th:href="@{/atendimentos/novo}">Agendar atendimento</a>
+    </div>
+
+    <section class="painel">
+        <form class="filtros" th:action="@{/atendimentos}" method="get">
+            <div class="campo campo-curto">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Todos</option>
+                    <option th:each="opcao : ${statusDisponiveis}" th:value="${opcao}" th:text="${opcao.descricao}"
+                            th:selected="${opcao == statusSelecionado}">Agendado</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="veterinarioId">Veterinário</label>
+                <select id="veterinarioId" name="veterinarioId">
+                    <option value="">Todos</option>
+                    <option th:each="vet : ${veterinarios}" th:value="${vet.id}" th:text="${vet.nome}"
+                            th:selected="${vet.id == veterinarioSelecionado}">Ana</option>
+                </select>
+            </div>
+            <div class="campo campo-curto">
+                <label for="data">Data</label>
+                <input id="data" name="data" type="date" th:value="${dataSelecionada}">
+            </div>
+            <button type="submit" class="botao botao-secundario">Filtrar</button>
+            <a class="botao botao-secundario" th:href="@{/atendimentos}">Limpar</a>
+        </form>
+        <div class="tabela-wrapper" th:if="${pagina.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Pet</th>
+                    <th>Atendimento</th>
+                    <th>Status</th>
+                    <th class="coluna-acoes"><span class="oculto-visual">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="exame : ${pagina.content}">
+                    <td>
+                        <strong th:text="${#temporals.format(exame.dataHora, 'dd/MM/yyyy')}">01/01/2026</strong>
+                        <span class="secundario" th:text="${#temporals.format(exame.dataHora, 'HH:mm')}">10:00</span>
+                    </td>
+                    <td>
+                        <a th:href="@{/pets/{id}(id=${exame.petId})}"><strong th:text="${exame.petNome}">Thor</strong></a>
+                        <span class="secundario codigo" th:text="${exame.petCode}">PET</span>
+                    </td>
+                    <td>
+                        <span th:text="${exame.tipo.descricao}">Consulta</span>
+                        <span class="secundario" th:text="${exame.veterinarioNome}">Ana</span>
+                    </td>
+                    <td><span class="etiqueta" th:classappend="|status-${exame.status}|" th:text="${exame.status.descricao}">Agendado</span></td>
+                    <td class="coluna-acoes">
+                        <th:block th:replace="~{atendimentos/acoes :: acoes(${exame}, ${link})}"></th:block>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="vazio" th:if="${pagina.totalElements == 0}">
+            <strong>Nenhum atendimento encontrado</strong>
+            Ajuste os filtros ou agende um novo atendimento.
+        </div>
+        <div th:replace="~{fragments/layout :: paginacao(${pagina}, ${link})}"></div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>

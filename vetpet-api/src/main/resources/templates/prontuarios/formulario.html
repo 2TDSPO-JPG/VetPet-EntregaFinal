@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${prontuarioId == null} ? 'Registrar prontuário' : 'Editar prontuário')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('prontuarios', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="${prontuarioId == null} ? 'Registrar prontuário' : 'Editar prontuário'">Registrar prontuário</h1>
+            <p th:if="${atendimento != null}"
+               th:text="|${atendimento.tipo.descricao} de ${atendimento.petNome} em ${#temporals.format(atendimento.dataHora, 'dd/MM/yyyy HH:mm')} com ${atendimento.veterinarioNome}. Ao salvar, o atendimento é concluído e os tutores são avisados.|">Contexto</p>
+            <p th:if="${prontuario != null}"
+               th:text="|${prontuario.tipoAtendimento.descricao} de ${prontuario.petNome} em ${#temporals.format(prontuario.dataAtendimento, 'dd/MM/yyyy')}|">Contexto</p>
+        </div>
+    </div>
+
+    <form class="painel formulario" method="post" th:object="${form}" novalidate
+          th:action="${prontuarioId == null} ? @{/prontuarios/novo} : @{/prontuarios/{id}/editar(id=${prontuarioId})}">
+        <input type="hidden" th:field="*{exameId}">
+        <div class="secao-form" th:if="${#fields.hasGlobalErrors()}">
+            <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+        </div>
+        <section class="secao-form">
+            <div class="campos" style="margin-top:0">
+                <div th:replace="~{fragments/layout :: texto('diagnostico', 'Diagnóstico', 'campo-6')}"></div>
+                <div th:replace="~{fragments/layout :: texto('prescricao', 'Prescrição', 'campo-6')}"></div>
+                <div th:replace="~{fragments/layout :: texto('examesSolicitados', 'Exames solicitados', 'campo-3')}"></div>
+                <div th:replace="~{fragments/layout :: texto('observacoes', 'Observações', 'campo-3')}"></div>
+                <div class="campo campo-2" th:classappend="${#fields.hasErrors('pesoAferidoKg')} ? 'campo-erro'">
+                    <label for="pesoAferidoKg">Peso aferido (kg)</label>
+                    <input type="number" step="0.01" min="0" th:field="*{pesoAferidoKg}">
+                    <span class="ajuda">Atualiza o peso na ficha do pet.</span>
+                    <span class="erro-campo" th:if="${#fields.hasErrors('pesoAferidoKg')}" th:errors="*{pesoAferidoKg}">Erro</span>
+                </div>
+                <div th:replace="~{fragments/layout :: entrada('proximoRetorno', 'Próximo retorno', 'date', 'campo-2')}"></div>
+            </div>
+        </section>
+        <div class="rodape-form">
+            <a class="botao botao-secundario" th:href="${prontuarioId == null} ? @{/atendimentos} : @{/prontuarios/{id}(id=${prontuarioId})}">Cancelar</a>
+            <button type="submit" class="botao" th:text="${prontuarioId == null} ? 'Registrar e concluir atendimento' : 'Salvar alterações'">Salvar</button>
+        </div>
+    </form>
+</main>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Painel')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('painel', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="|Olá, ${usuario.nome}|">Olá</h1>
+            <p>Resumo do dia na clínica e o que precisa da sua atenção.</p>
+        </div>
+        <div class="acoes">
+            <a class="botao botao-secundario" th:href="@{/pets/novo}">Cadastrar pet</a>
+            <a class="botao" th:href="@{/atendimentos/novo}">Agendar atendimento</a>
+        </div>
+    </div>
+
+    <div class="indicadores">
+        <a class="indicador indicador-destaque" th:href="@{/atendimentos(data=${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')})}">
+            <strong th:text="${resumo.atendimentosHoje}">3</strong>
+            <span>atendimentos hoje</span>
+        </a>
+        <a class="indicador" th:href="@{/atendimentos(status='AGENDADO')}">
+            <strong th:text="${resumo.atendimentosAgendados}">12</strong>
+            <span>agendados no total</span>
+        </a>
+        <a class="indicador" th:href="@{/pets}">
+            <strong th:text="${resumo.totalPets}">40</strong>
+            <span>pets acompanhados</span>
+        </a>
+        <a class="indicador" th:href="@{/tutores}">
+            <strong th:text="${resumo.totalTutores}">35</strong>
+            <span>tutores</span>
+        </a>
+        <div class="indicador">
+            <strong th:text="${resumo.perguntasPendentes}">2</strong>
+            <span>dúvidas sem resposta</span>
+        </div>
+    </div>
+
+    <div class="grade grade-principal">
+        <section class="painel">
+            <div class="painel-titulo">
+                <h2>Próximos atendimentos</h2>
+                <a th:href="@{/atendimentos}">Ver agenda</a>
+            </div>
+            <ul class="lista-simples" th:unless="${#lists.isEmpty(resumo.proximosAtendimentos)}">
+                <li th:each="exame : ${resumo.proximosAtendimentos}">
+                    <div>
+                        <a th:href="@{/pets/{id}(id=${exame.petId})}"><strong th:text="${exame.petNome}">Thor</strong></a>
+                        <span class="secundario" th:text="|${exame.tipo.descricao} com ${exame.veterinarioNome}|">Consulta</span>
+                    </div>
+                    <div class="data">
+                        <span th:text="${#temporals.format(exame.dataHora, 'dd/MM')}">20/10</span><br>
+                        <strong th:text="${#temporals.format(exame.dataHora, 'HH:mm')}">10:00</strong>
+                    </div>
+                </li>
+            </ul>
+            <div class="vazio" th:if="${#lists.isEmpty(resumo.proximosAtendimentos)}">
+                <strong>Agenda livre</strong>
+                Nenhum atendimento em aberto. Agende o próximo check-up de um pet.
+            </div>
+        </section>
+
+        <section class="painel">
+            <div class="painel-titulo">
+                <h2>Dúvidas dos tutores</h2>
+            </div>
+            <ul class="lista-simples" th:unless="${#lists.isEmpty(resumo.perguntasAguardando)}">
+                <li th:each="pergunta : ${resumo.perguntasAguardando}">
+                    <div>
+                        <a th:href="@{|/pets/${pergunta.petId}#aba-perguntas|}"><strong th:text="${pergunta.petNome}">Bidu</strong></a>
+                        <span class="secundario" th:text="${pergunta.texto}">Pergunta</span>
+                    </div>
+                    <span class="data" th:text="${#temporals.format(pergunta.criadaEm, 'dd/MM')}">18/10</span>
+                </li>
+            </ul>
+            <div class="vazio" th:if="${#lists.isEmpty(resumo.perguntasAguardando)}">
+                <strong>Tudo respondido</strong>
+                Nenhuma dúvida aguardando a equipe.
+            </div>
+        </section>
+    </div>
+</main>
+</th:block>
+</body>
+</html>

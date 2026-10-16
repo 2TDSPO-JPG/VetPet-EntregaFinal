@@ -1,0 +1,53 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: CI
+    displayName: Build, testes e artefatos
+    jobs:
+      - job: Build
+        displayName: Build
+        strategy:
+          matrix:
+            vetpet_api:
+              projeto: vetpet-api
+            vetpet_notificacao:
+              projeto: vetpet-notificacao
+        steps:
+          - checkout: self
+
+          - script: |
+              export JAVA_HOME=$(JAVA_HOME_21_X64)
+              chmod +x mvnw
+              ./mvnw -B clean verify
+            workingDirectory: $(projeto)
+            displayName: Compilar e executar testes
+
+          - task: PublishTestResults@2
+            displayName: Publicar resultados dos testes
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: $(projeto)/target/surefire-reports/TEST-*.xml
+              testRunTitle: Testes $(projeto)
+              failTaskOnFailedTests: true
+
+          - task: CopyFiles@2
+            displayName: Separar o .jar
+            inputs:
+              SourceFolder: $(projeto)/target
+              Contents: '*.jar'
+              TargetFolder: $(Build.ArtifactStagingDirectory)/$(projeto)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publicar artefato
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/$(projeto)
+              artifact: $(projeto)

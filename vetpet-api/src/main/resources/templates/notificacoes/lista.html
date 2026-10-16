@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Notificações')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('notificacoes', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Notificações enviadas</h1>
+            <p>Mensagens geradas pelo microsserviço de notificações a partir dos eventos publicados no RabbitMQ.</p>
+        </div>
+    </div>
+
+    <div class="alerta alerta-info" role="status" th:unless="${consulta.disponivel}">
+        O serviço de notificações não respondeu. Se ele estiver hospedado no plano gratuito, pode estar iniciando:
+        aguarde alguns segundos e recarregue a página.
+    </div>
+
+    <section class="painel">
+        <form class="filtros" th:action="@{/notificacoes}" method="get" role="search">
+            <div class="campo">
+                <label for="email">Filtrar pelo e-mail do tutor</label>
+                <input id="email" name="email" type="email" th:value="${email}" placeholder="Ex.: mariana@example.com">
+            </div>
+            <button type="submit" class="botao botao-secundario">Filtrar</button>
+        </form>
+        <article class="notificacao" th:each="notificacao : ${consulta.notificacoes}">
+            <span class="notificacao-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.2L4 17.2z"/><path d="M8 9h8M8 12h5"/></svg>
+            </span>
+            <div>
+                <strong th:text="${notificacao.titulo}">Atendimento agendado</strong>
+                <p th:text="${notificacao.mensagem}">Mensagem</p>
+                <small th:text="${#lists.isEmpty(notificacao.destinatarios)} ? 'Para: equipe da clínica' : 'Para: ' + ${#strings.listJoin(notificacao.destinatarios, ', ')}">Para</small>
+                <span class="etiqueta" th:switch="${notificacao.canal}" style="margin-left:.4rem">
+                    <span th:case="'EMAIL'">E-mail enviado</span>
+                    <span th:case="'EMAIL_SIMULADO'">E-mail simulado</span>
+                    <span th:case="'EMAIL_FALHOU'">Falha no envio</span>
+                    <span th:case="*">Painel da clínica</span>
+                </span>
+            </div>
+            <small th:text="${#temporals.format(notificacao.criadaEm, 'dd/MM HH:mm')}">10/10 10:00</small>
+        </article>
+        <div class="vazio" th:if="${consulta.disponivel and #lists.isEmpty(consulta.notificacoes)}">
+            <strong>Nenhuma notificação</strong>
+            Agende um atendimento ou responda uma pergunta para gerar a primeira.
+        </div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>

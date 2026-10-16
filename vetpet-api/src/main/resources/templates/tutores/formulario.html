@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca(${tutorId == null} ? 'Novo tutor' : 'Editar tutor')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('tutores', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="${tutorId == null} ? 'Novo tutor' : 'Editar tutor'">Novo tutor</h1>
+            <p>O tutor recebe avisos de agendamentos, prontuários e respostas sobre seus pets.</p>
+        </div>
+    </div>
+
+    <form class="painel formulario" method="post" th:object="${form}" novalidate
+          th:action="${tutorId == null} ? @{/tutores/novo} : @{/tutores/{id}/editar(id=${tutorId})}">
+        <div class="secao-form" th:if="${#fields.hasGlobalErrors()}">
+            <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+        </div>
+        <th:block th:replace="~{fragments/pessoa :: dadosPessoais(${tutorId == null}, 'Senha de acesso ao app do tutor')}"></th:block>
+        <div class="rodape-form">
+            <a class="botao botao-secundario" th:href="${tutorId == null} ? @{/tutores} : @{/tutores/{id}(id=${tutorId})}">Cancelar</a>
+            <button type="submit" class="botao" th:text="${tutorId == null} ? 'Cadastrar tutor' : 'Salvar alterações'">Salvar</button>
+        </div>
+    </form>
+</main>
+</th:block>
+</body>
+</html>

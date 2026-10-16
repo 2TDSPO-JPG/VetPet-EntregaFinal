@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Algo não saiu como esperado')}"></head>
+<body>
+<div class="erro-pagina">
+    <div>
+        <strong th:text="${status}">404</strong>
+        <h1 th:switch="${status}">
+            <span th:case="404">Não encontramos esta página</span>
+            <span th:case="403">Área restrita à equipe da clínica</span>
+            <span th:case="422">Não foi possível concluir a ação</span>
+            <span th:case="*">O sistema encontrou um erro</span>
+        </h1>
+        <p class="ajuda" th:if="${status == 403}">Tutores acompanham seus pets pelo aplicativo VetPet.</p>
+        <p class="ajuda" th:if="${status != 403 and message != null and status != 500}" th:text="${message}">Detalhe</p>
+        <p class="ajuda" th:if="${status == 500}">Tente novamente em instantes. Se persistir, avise a equipe técnica.</p>
+        <p><a class="botao" th:href="@{/dashboard}">Voltar ao painel</a></p>
+    </div>
+</div>
+</body>
+</html>

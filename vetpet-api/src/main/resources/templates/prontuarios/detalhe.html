@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Prontuário de ' + ${prontuario.petNome})}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('prontuarios', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1 th:text="|${prontuario.tipoAtendimento.descricao} de ${prontuario.petNome}|">Consulta de Thor</h1>
+            <p th:text="|${#temporals.format(prontuario.dataAtendimento, 'dd/MM/yyyy HH:mm')} com ${prontuario.veterinarioNome}|">Data</p>
+        </div>
+        <div class="acoes">
+            <a class="botao botao-secundario" th:href="@{/pets/{id}(id=${prontuario.petId})}">Ver pet</a>
+            <a class="botao" th:href="@{/prontuarios/{id}/editar(id=${prontuario.id})}">Editar prontuário</a>
+        </div>
+    </div>
+
+    <div class="grade grade-principal">
+        <section class="painel">
+            <article class="registro">
+                <h2>Diagnóstico</h2>
+                <p style="margin-top:.5rem" th:text="${prontuario.diagnostico}">Diagnóstico</p>
+            </article>
+            <article class="registro">
+                <h2>Prescrição</h2>
+                <p style="margin-top:.5rem" th:text="${prontuario.prescricao} ?: 'Nenhuma prescrição.'">Prescrição</p>
+            </article>
+            <article class="registro">
+                <h2>Exames solicitados</h2>
+                <p style="margin-top:.5rem" th:text="${prontuario.examesSolicitados} ?: 'Nenhum exame solicitado.'">Exames</p>
+            </article>
+            <article class="registro">
+                <h2>Observações</h2>
+                <p style="margin-top:.5rem" th:text="${prontuario.observacoes} ?: 'Sem observações.'">Observações</p>
+            </article>
+        </section>
+        <section class="painel painel-corpo">
+            <h2>Resumo</h2>
+            <dl class="dados" style="margin-top:1rem">
+                <div><dt>Pet</dt><dd><span th:text="${prontuario.petNome}">Thor</span> <span class="codigo" th:text="${prontuario.petCode}">PET</span></dd></div>
+                <div><dt>Peso aferido</dt>
+                    <dd th:text="${prontuario.pesoAferidoKg != null} ? |${#numbers.formatDecimal(prontuario.pesoAferidoKg, 1, 'POINT', 2, 'COMMA')} kg| : 'Não aferido'">-</dd></div>
+                <div><dt>Próximo retorno</dt>
+                    <dd th:text="${prontuario.proximoRetorno != null} ? ${#temporals.format(prontuario.proximoRetorno, 'dd/MM/yyyy')} : 'Sem retorno'">-</dd></div>
+                <div><dt>Última atualização</dt>
+                    <dd th:text="${#temporals.format(prontuario.atualizadoEm, 'dd/MM/yyyy HH:mm')}">-</dd></div>
+            </dl>
+        </section>
+    </div>
+</main>
+</th:block>
+</body>
+</html>

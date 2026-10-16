@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Pets')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('pets', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Pets</h1>
+            <p>Abra um pet para ver a linha da vida, os atendimentos e as dúvidas dos tutores.</p>
+        </div>
+        <a class="botao" th:href="@{/pets/novo}">Cadastrar pet</a>
+    </div>
+
+    <section class="painel">
+        <form class="filtros" th:action="@{/pets}" method="get" role="search">
+            <div class="campo">
+                <label for="busca">Buscar por nome, código ou raça</label>
+                <input id="busca" name="busca" type="search" th:value="${busca}" placeholder="Ex.: Thor ou PET-7F3A">
+            </div>
+            <button type="submit" class="botao botao-secundario">Buscar</button>
+        </form>
+        <div class="tabela-wrapper" th:if="${pagina.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Pet</th>
+                    <th>Código</th>
+                    <th>Idade</th>
+                    <th>Peso</th>
+                    <th>Tutores</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="pet : ${pagina.content}">
+                    <td>
+                        <a th:href="@{/pets/{id}(id=${pet.id})}"><strong th:text="${pet.nome}">Thor</strong></a>
+                        <span class="secundario" th:text="|${pet.especie.descricao}${pet.raca != null ? ', ' + pet.raca : ''}|">Cachorro</span>
+                    </td>
+                    <td><span class="codigo" th:text="${pet.petCode}">PET-0000</span></td>
+                    <td th:text="${pet.idade == 1} ? '1 ano' : |${pet.idade} anos|">3 anos</td>
+                    <td th:text="${pet.pesoKg != null} ? |${#numbers.formatDecimal(pet.pesoKg, 1, 'POINT', 2, 'COMMA')} kg| : '-'">30 kg</td>
+                    <td>
+                        <span th:each="tutor, info : ${pet.tutores}" th:text="${tutor.nome} + (${info.last} ? '' : ', ')">Mariana</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="vazio" th:if="${pagina.totalElements == 0}">
+            <strong th:text="${#strings.isEmpty(busca)} ? 'Nenhum pet cadastrado' : 'Nenhum pet encontrado'">Nenhum pet</strong>
+            <span th:text="${#strings.isEmpty(busca)} ? 'Cadastre o primeiro pet para iniciar o acompanhamento.' : 'Tente outro nome, código ou raça.'">Texto</span>
+        </div>
+        <div th:replace="~{fragments/layout :: paginacao(${pagina}, ${link})}"></div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>

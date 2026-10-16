@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="dadosPessoais(novo, rotuloSenha)">
+    <section class="secao-form">
+        <h2>Dados pessoais</h2>
+        <div class="campos">
+            <div th:replace="~{fragments/layout :: entrada('nome', 'Nome completo', 'text', 'campo-4')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('cpf', 'CPF', 'text', 'campo-2')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('email', 'E-mail', 'email', 'campo-3')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('telefone', 'Telefone', 'tel', 'campo-3')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('fotoUrl', 'Link da foto (opcional)', 'url', 'campo-6')}"></div>
+            <div class="campo campo-3" th:if="${novo}" th:classappend="${#fields.hasErrors('senha')} ? 'campo-erro'">
+                <label for="senha" th:text="${rotuloSenha}">Senha</label>
+                <input type="password" id="senha" th:field="*{senha}" autocomplete="new-password">
+                <span class="ajuda">Mínimo de 6 caracteres.</span>
+                <span class="erro-campo" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}">Erro</span>
+            </div>
+        </div>
+    </section>
+    <section class="secao-form">
+        <h2>Endereço</h2>
+        <p>Opcional. Ajuda em visitas domiciliares e na entrega de medicamentos.</p>
+        <div class="campos">
+            <div th:replace="~{fragments/layout :: entrada('endereco.cep', 'CEP', 'text', 'campo-2')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.logradouro', 'Logradouro', 'text', 'campo-4')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.numero', 'Número', 'text', 'campo-1')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.complemento', 'Complemento', 'text', 'campo-2')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.bairro', 'Bairro', 'text', 'campo-3')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.cidade', 'Cidade', 'text', 'campo-4')}"></div>
+            <div th:replace="~{fragments/layout :: entrada('endereco.estado', 'UF', 'text', 'campo-2')}"></div>
+        </div>
+    </section>
+</th:block>
+
+</body>
+</html>

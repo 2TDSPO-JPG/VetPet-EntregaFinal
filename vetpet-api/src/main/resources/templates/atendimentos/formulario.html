@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Agendar atendimento')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('atendimentos', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Agendar atendimento</h1>
+            <p>Os tutores do pet recebem a confirmação e um lembrete 24 horas antes.</p>
+        </div>
+    </div>
+
+    <form class="painel formulario" method="post" th:object="${form}" th:action="@{/atendimentos/novo}" novalidate>
+        <div class="secao-form" th:if="${#fields.hasGlobalErrors()}">
+            <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+        </div>
+        <section class="secao-form">
+            <div class="campos" style="margin-top:0">
+                <div class="campo campo-3" th:classappend="${#fields.hasErrors('petId')} ? 'campo-erro'">
+                    <label for="petId">Pet</label>
+                    <select th:field="*{petId}">
+                        <option value="">Selecione o pet</option>
+                        <option th:each="pet : ${pets}" th:value="${pet.id}" th:text="|${pet.nome} (${pet.petCode})|">Thor</option>
+                    </select>
+                    <span class="erro-campo" th:if="${#fields.hasErrors('petId')}" th:errors="*{petId}">Erro</span>
+                </div>
+                <div class="campo campo-3" th:classappend="${#fields.hasErrors('veterinarioId')} ? 'campo-erro'">
+                    <label for="veterinarioId">Veterinário</label>
+                    <select th:field="*{veterinarioId}">
+                        <option value="">Selecione o profissional</option>
+                        <option th:each="vet : ${veterinarios}" th:value="${vet.id}"
+                                th:text="${vet.especialidade != null} ? |${vet.nome}, ${vet.especialidade}| : ${vet.nome}">Ana</option>
+                    </select>
+                    <span class="erro-campo" th:if="${#fields.hasErrors('veterinarioId')}" th:errors="*{veterinarioId}">Erro</span>
+                </div>
+                <div class="campo campo-3" th:classappend="${#fields.hasErrors('tipo')} ? 'campo-erro'">
+                    <label for="tipo">Tipo</label>
+                    <select th:field="*{tipo}">
+                        <option value="">Selecione</option>
+                        <option th:each="tipo : ${tipos}" th:value="${tipo}" th:text="${tipo.descricao}">Consulta</option>
+                    </select>
+                    <span class="erro-campo" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}">Erro</span>
+                </div>
+                <div th:replace="~{fragments/layout :: entrada('dataHora', 'Data e horário', 'datetime-local', 'campo-3')}"></div>
+                <div th:replace="~{fragments/layout :: texto('motivo', 'Motivo (opcional)', 'campo-6')}"></div>
+            </div>
+        </section>
+        <div class="rodape-form">
+            <a class="botao botao-secundario" th:href="@{/atendimentos}">Cancelar</a>
+            <button type="submit" class="botao">Agendar</button>
+        </div>
+    </form>
+</main>
+</th:block>
+</body>
+</html>

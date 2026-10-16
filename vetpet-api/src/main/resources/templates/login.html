@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Entrar')}"></head>
+<body>
+<div class="login-pagina">
+    <section class="login-lado">
+        <a class="marca" th:href="@{/}">
+            <img th:src="@{/favicon/faviconVetPet.jpg}" alt="">
+            Vet<span>Pet</span>
+        </a>
+        <div>
+            <h1>A saúde de cada pet, sempre à vista.</h1>
+            <p>Painel da equipe da clínica para acompanhar pets, tutores, atendimentos e prontuários.</p>
+        </div>
+        <small>Challenge FIAP 2026, equipe VetPet</small>
+    </section>
+
+    <section class="login-form">
+        <form th:action="@{/login}" method="post">
+            <h2>Entrar no painel</h2>
+            <p class="ajuda">Use o e-mail cadastrado como veterinário ou administrador.</p>
+
+            <div class="alerta alerta-erro" role="alert" th:if="${param.erro != null}">
+                E-mail ou senha inválidos. Confira os dados e tente novamente.
+            </div>
+            <div class="alerta alerta-sucesso" role="status" th:if="${param.saiu != null}">
+                Você saiu do painel.
+            </div>
+
+            <div class="campo">
+                <label for="username">E-mail</label>
+                <input id="username" name="username" type="email" autocomplete="username" required autofocus>
+            </div>
+            <div class="campo">
+                <label for="password">Senha</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="botao">Entrar</button>
+
+            <div class="demo-acesso">
+                <strong>Acesso de demonstração</strong><br>
+                Administrador: admin@vetpet.com / admin123<br>
+                Veterinária: ana@vetpet.com / vet12345
+            </div>
+        </form>
+    </section>
+</div>
+</body>
+</html>

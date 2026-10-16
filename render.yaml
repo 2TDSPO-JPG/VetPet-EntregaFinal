@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: vetpet-notificacao
+    runtime: docker
+    plan: free
+    rootDir: vetpet-notificacao
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health/liveness
+    envVars:
+      - key: RABBITMQ_URL
+        sync: false
+      - key: NOTIFICACAO_API_KEY
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+
+  - type: web
+    name: vetpet-api
+    runtime: docker
+    plan: free
+    rootDir: vetpet-api
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health/liveness
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SEED_HABILITADO
+        value: "true"
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: VETPET_ADMIN_EMAIL
+        sync: false
+      - key: VETPET_ADMIN_SENHA
+        sync: false
+      - key: RABBITMQ_URL
+        sync: false
+      - key: NOTIFICACAO_URL
+        sync: false
+      - key: NOTIFICACAO_API_KEY
+        sync: false

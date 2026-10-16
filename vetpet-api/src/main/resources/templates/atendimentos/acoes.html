@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="acoes(exame, voltarPara)">
+    <a class="botao botao-pequeno" th:if="${exame.podeRegistrarProntuario}"
+       th:href="@{/prontuarios/novo(exameId=${exame.id})}">Registrar prontuário</a>
+    <a class="botao botao-secundario botao-pequeno" th:if="${exame.prontuarioId != null}"
+       th:href="@{/prontuarios/{id}(id=${exame.prontuarioId})}">Ver prontuário</a>
+    <form th:if="${exame.status.name() == 'AGENDADO'}" th:action="@{/atendimentos/{id}/status(id=${exame.id})}" method="post">
+        <input type="hidden" name="status" value="ADIADO">
+        <input type="hidden" name="voltarPara" th:value="${voltarPara}">
+        <button type="submit" class="botao botao-secundario botao-pequeno">Adiar</button>
+    </form>
+    <form th:if="${exame.status.name() == 'ADIADO'}" th:action="@{/atendimentos/{id}/status(id=${exame.id})}" method="post">
+        <input type="hidden" name="status" value="AGENDADO">
+        <input type="hidden" name="voltarPara" th:value="${voltarPara}">
+        <button type="submit" class="botao botao-secundario botao-pequeno">Confirmar</button>
+    </form>
+    <form th:if="${exame.podeCancelar}" th:action="@{/atendimentos/{id}/status(id=${exame.id})}" method="post"
+          data-confirmar="Cancelar este atendimento? Os tutores serão avisados.">
+        <input type="hidden" name="status" value="CANCELADO">
+        <input type="hidden" name="voltarPara" th:value="${voltarPara}">
+        <button type="submit" class="botao botao-perigo botao-pequeno">Cancelar</button>
+    </form>
+</th:block>
+</body>
+</html>

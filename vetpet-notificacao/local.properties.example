@@ -1,0 +1,3 @@
+MAIL_USERNAME=email-da-clinica@gmail.com
+MAIL_PASSWORD=senha-de-app-de-16-letras
+RABBITMQ_URL=amqp://vetpet:vetpet@localhost:5672

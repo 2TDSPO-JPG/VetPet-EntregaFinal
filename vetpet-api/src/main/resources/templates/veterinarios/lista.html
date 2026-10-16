@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Veterinários')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('veterinarios', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Veterinários</h1>
+            <p>Equipe da clínica. Apenas administradores cadastram e editam profissionais.</p>
+        </div>
+        <a class="botao" th:if="${usuario.admin}" th:href="@{/veterinarios/novo}">Cadastrar veterinário</a>
+    </div>
+
+    <section class="painel">
+        <form class="filtros" th:action="@{/veterinarios}" method="get" role="search">
+            <div class="campo">
+                <label for="busca">Buscar por nome, CRMV ou especialidade</label>
+                <input id="busca" name="busca" type="search" th:value="${busca}" placeholder="Ex.: Cardiologia">
+            </div>
+            <button type="submit" class="botao botao-secundario">Buscar</button>
+        </form>
+        <div class="tabela-wrapper" th:if="${pagina.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Profissional</th>
+                    <th>CRMV</th>
+                    <th>Especialidade</th>
+                    <th>Contato</th>
+                    <th class="coluna-acoes" th:if="${usuario.admin}"><span class="oculto-visual">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="vet : ${pagina.content}">
+                    <td>
+                        <strong th:text="${vet.nome}">Ana Ribeiro</strong>
+                        <span class="secundario" th:if="${vet.anosExperiencia != null}" th:text="|${vet.anosExperiencia} anos de experiência|">9 anos</span>
+                    </td>
+                    <td th:text="${vet.crmv}">CRMV</td>
+                    <td th:text="${vet.especialidade} ?: 'Clínica geral'">Clínica geral</td>
+                    <td>
+                        <span th:text="${vet.email}">email</span>
+                        <span class="secundario" th:text="${vet.telefone}">telefone</span>
+                    </td>
+                    <td class="coluna-acoes" th:if="${usuario.admin}">
+                        <a class="botao botao-secundario botao-pequeno" th:href="@{/veterinarios/{id}/editar(id=${vet.id})}">Editar</a>
+                        <form th:action="@{/veterinarios/{id}/excluir(id=${vet.id})}" method="post"
+                              th:attr="data-confirmar=|Remover ${vet.nome} da equipe?|">
+                            <button type="submit" class="botao botao-perigo botao-pequeno">Remover</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="vazio" th:if="${pagina.totalElements == 0}">
+            <strong>Nenhum veterinário encontrado</strong>
+            Cadastre a equipe para começar a agendar atendimentos.
+        </div>
+        <div th:replace="~{fragments/layout :: paginacao(${pagina}, ${link})}"></div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,7 @@
+DB_URL=jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL
+DB_USERNAME=seu_rm
+DB_PASSWORD=sua_senha
+VETPET_ADMIN_EMAIL=admin@vetpet.com
+VETPET_ADMIN_SENHA=admin123
+SEED_HABILITADO=true
+RABBITMQ_URL=amqp://vetpet:vetpet@localhost:5672

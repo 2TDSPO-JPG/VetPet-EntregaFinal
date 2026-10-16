@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: cabeca('Tutores')}"></head>
+<body>
+<th:block th:replace="~{fragments/layout :: pagina('tutores', ~{::main})}">
+<main>
+    <div class="cabecalho">
+        <div>
+            <h1>Tutores</h1>
+            <p>Responsáveis pelos pets. Um pet pode ter mais de um tutor.</p>
+        </div>
+        <a class="botao" th:href="@{/tutores/novo}">Cadastrar tutor</a>
+    </div>
+
+    <section class="painel">
+        <form class="filtros" th:action="@{/tutores}" method="get" role="search">
+            <div class="campo">
+                <label for="busca">Buscar por nome, e-mail ou CPF</label>
+                <input id="busca" name="busca" type="search" th:value="${busca}" placeholder="Ex.: Mariana">
+            </div>
+            <button type="submit" class="botao botao-secundario">Buscar</button>
+        </form>
+        <div class="tabela-wrapper" th:if="${pagina.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Contato</th>
+                    <th>CPF</th>
+                    <th>Pets</th>
+                    <th class="coluna-acoes"><span class="oculto-visual">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="tutor : ${pagina.content}">
+                    <td><a th:href="@{/tutores/{id}(id=${tutor.id})}"><strong th:text="${tutor.nome}">Mariana</strong></a></td>
+                    <td>
+                        <span th:text="${tutor.email}">mariana@example.com</span>
+                        <span class="secundario" th:text="${tutor.telefone} ?: 'Sem telefone'">(11) 9999</span>
+                    </td>
+                    <td th:text="${tutor.cpf}">000.000.000-00</td>
+                    <td th:text="${tutor.quantidadePets}">2</td>
+                    <td class="coluna-acoes">
+                        <a class="botao botao-secundario botao-pequeno" th:href="@{/tutores/{id}/editar(id=${tutor.id})}">Editar</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="vazio" th:if="${pagina.totalElements == 0}">
+            <strong th:text="${#strings.isEmpty(busca)} ? 'Nenhum tutor cadastrado' : 'Nenhum tutor encontrado'">Nenhum tutor</strong>
+            <span th:text="${#strings.isEmpty(busca)} ? 'Cadastre o primeiro tutor para começar a acompanhar seus pets.' : 'Tente buscar por outro nome, e-mail ou CPF.'">Texto</span>
+        </div>
+        <div th:replace="~{fragments/layout :: paginacao(${pagina}, ${link})}"></div>
+    </section>
+</main>
+</th:block>
+</body>
+</html>
