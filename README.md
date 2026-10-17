@@ -6,8 +6,9 @@ O VetPet transforma cada cadastro, agendamento, prontuário e dúvida de tutor e
 
 | | |
 |---|---|
-| **Aplicação online** | `https://vetpet-api-java-marcel.onrender.com` (atualize após o deploy) |
-| **Documentação da API (Swagger)** | `https://vetpet-api-java-marcel.onrender.com/swagger-ui.html` |
+| **Aplicação online** | https://vetpet-api-rm565824.azurewebsites.net |
+| **Documentação da API (Swagger)** | https://vetpet-api-rm565824.azurewebsites.net/swagger-ui.html |
+| **Projeto no Azure DevOps** | `adicione aqui o link do projeto` |
 | **Vídeo da apresentação** | `adicione aqui o link do YouTube` |
 | **Disciplinas integradas** | Java Advanced + Cloud / DevOps |
 
@@ -256,7 +257,7 @@ Todos os tutores vinculados ao pet recebem um e-mail com a identidade visual do 
 
 1. Na conta Google que vai enviar os e-mails, ative a **verificação em duas etapas**.
 2. Acesse **Conta Google → Segurança → Senhas de app**, crie uma senha para "VetPet" e copie os 16 caracteres.
-3. Copie `vetpet-notificacao/local.properties.example` para `vetpet-notificacao/local.properties` e preencha `MAIL_USERNAME` (o Gmail) e `MAIL_PASSWORD` (a senha de app, sem espaços). No Render, preencha essas variáveis no serviço `vetpet-notificacao`.
+3. Copie `vetpet-notificacao/local.properties.example` para `vetpet-notificacao/local.properties` e preencha `MAIL_USERNAME` (o Gmail) e `MAIL_PASSWORD` (a senha de app, sem espaços). Na Azure, essas variáveis ficam protegidas no grupo de variáveis da pipeline (veja [Deploy](#deploy-cloud--devops)).
 
 Sem essas variáveis o envio fica **simulado** (aparece no log e na tela de notificações). E-mails de demonstração com domínio `example.com` nunca são enviados.
 
@@ -279,7 +280,8 @@ Sem essas variáveis o envio fica **simulado** (aparece no log e na tela de noti
 | JUnit 5 + Mockito + MockMvc | Testes | Testes de unidade nos services e de integração em API e telas |
 | Docker + Docker Compose | Containers | Mesmo ambiente local e em nuvem. Sobe API, notificação e RabbitMQ com um comando |
 | Azure DevOps (Azure Pipelines) | CI/CD | Compila, testa e publica o artefato de cada serviço a cada push na branch `master` |
-| Render + CloudAMQP | Deploy | Plano gratuito com suporte a Docker e RabbitMQ gerenciado |
+| Azure App Service + Azure SQL | Deploy e banco em nuvem | Plataforma gerenciada (PaaS) para Java 21 e banco SQL Server gerenciado, sem administrar servidores |
+| CloudAMQP | RabbitMQ gerenciado | Plano gratuito, acessível pelos dois Web Apps |
 
 ### Identidade visual
 
@@ -421,22 +423,18 @@ A API funciona com dois bancos, escolhidos pelo perfil do Spring, sem alterar c�
 |---|---|---|
 | *(padrão)* | **H2 em arquivo** (`vetpet-api/data/`) | Desenvolvimento local. Não precisa de instalação nem credenciais, e os dados ficam salvos entre as execuções |
 | `oracle` | **Oracle FIAP** | Banco oficial do projeto e da disciplina de banco de dados |
-| `prod` | Banco definido por `DB_URL` | Deploy no Render |
+| `prod` | **Azure SQL** (definido por `DB_URL`) | Deploy na Azure |
 
 As tabelas (prefixo `VP_`) são criadas e atualizadas pelo Hibernate (`ddl-auto=update`). Para usar o Oracle no IntelliJ, abra *Run → Edit Configurations*, preencha **Active profiles** com `oracle` e defina `DB_USERNAME` e `DB_PASSWORD` nas variáveis de ambiente (ou no `vetpet-api/local.properties`). Para apagar os dados locais, basta excluir a pasta `vetpet-api/data/`.
 
-O código não depende de recursos específicos de um banco: só usa tipos portáveis (`VARCHAR`, `DECIMAL`, `DATE`, `TIMESTAMP`), chaves `IDENTITY` e consultas JPQL. O Hibernate detecta o dialeto pela URL, então **trocar de banco não exige alterar código**: para o SQL Server basta adicionar o driver ao `pom.xml` (`com.microsoft.sqlserver:mssql-jdbc`, versão gerenciada pelo Spring Boot) e mudar a configuração.
+O código não depende de recursos específicos de um banco: só usa tipos portáveis (`VARCHAR`, `DECIMAL`, `DATE`, `TIMESTAMP`), chaves `IDENTITY` e consultas JPQL. O Hibernate detecta o dialeto pela URL, e os drivers do Oracle, do SQL Server e do H2 já estão no `pom.xml`, então **trocar de banco não exige alterar código**.
 
 | Banco | `DB_URL` |
 |---|---|
 | Oracle FIAP | `jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL` |
-| Azure SQL | `jdbc:sqlserver://SEU-SERVIDOR.database.windows.net:1433;database=vetpet;encrypt=true;trustServerCertificate=false;loginTimeout=30` |
+| Azure SQL | `jdbc:sqlserver://sql-vetpet-rm565824.database.windows.net:1433;database=vetpet;encrypt=true;trustServerCertificate=false;loginTimeout=30` |
 
-Para migrar para o Azure SQL:
-
-1. Crie o banco no portal do Azure e libere o seu IP no firewall do servidor.
-2. Adicione a dependência `mssql-jdbc` no `vetpet-api/pom.xml` e troque `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`.
-3. Inicie a API com o perfil `oracle` (que lê essas variáveis) ou `prod`. O Hibernate cria as tabelas, e o script equivalente está em [`docs/sql/03-schema-sqlserver.sql`](docs/sql/03-schema-sqlserver.sql).
+Na nuvem, as duas aplicações usam o **Azure SQL**: a API grava as tabelas do domínio e o microsserviço grava o histórico de notificações (`VP_NOTIFICACAO`). O DDL equivalente está em [`docs/sql/03-schema-sqlserver.sql`](docs/sql/03-schema-sqlserver.sql).
 
 > O Oracle da FIAP limita as sessões simultâneas por aluno (`ORA-02391`). Por isso o pool usa no máximo 2 conexões (`DB_POOL_MAX`), e cada integrante deve usar o próprio RM.
 
@@ -536,41 +534,63 @@ Para rodar a API **sem RabbitMQ**, defina `MENSAGERIA_HABILITADA=false`. A linha
 
 ## Deploy (Cloud / DevOps)
 
+A solução roda na **Azure** com serviços gerenciados (PaaS), e o CI/CD é feito no **Azure DevOps**.
+
+| Recurso | Nome | Função |
+|---|---|---|
+| Grupo de recursos | `rg-vetpet` | Agrupa todos os recursos |
+| Azure SQL (servidor + banco) | `sql-vetpet-rm565824` / `vetpet` | Banco relacional em nuvem (PaaS) |
+| Plano do App Service | `plan-vetpet` (Linux, B1) | Capacidade compartilhada pelos dois Web Apps |
+| Web App | `vetpet-api-rm565824` | API e painel da clínica (Java 21) |
+| Web App | `vetpet-notificacao-rm565824` | Microsserviço de notificação (Java 21) |
+| CloudAMQP | `vetpet` | RabbitMQ gerenciado, usado pelos dois Web Apps |
+
 ```mermaid
 flowchart LR
-    Dev[Push na branch master] --> CI[Azure Pipelines<br/>build + testes + artefatos]
-    CI --> Render[Render<br/>Blueprint render.yaml]
-    Render --> A[vetpet-api<br/>container Docker]
-    Render --> N[vetpet-notificacao<br/>container Docker]
-    A --> Oracle[(Oracle)]
-    A <--> MQ[(CloudAMQP<br/>RabbitMQ gerenciado)]
+    Dev[1. Push na branch master] --> CI[2. CI: build + testes]
+    CI --> Art[3. Artefatos app.jar publicados]
+    Art --> CD[4. CD: deploy automático]
+    CD --> N[vetpet-notificacao<br/>Azure Web App]
+    CD --> A[vetpet-api<br/>Azure Web App]
+    A --> SQL[(Azure SQL)]
+    N --> SQL
+    A <--> MQ[(CloudAMQP)]
     N <--> MQ
+    N --> Gmail[Gmail SMTP]
 ```
 
-O `docker-compose.yml` da raiz é para desenvolvimento local. Em produção, cada aplicação roda no próprio container, a partir do `Dockerfile` da sua pasta.
+### Pipeline ([`azure-pipelines.yml`](azure-pipelines.yml))
 
-### Passo a passo
+| Estágio | Etapa | O que faz |
+|---|---|---|
+| **CI** | Compilar e executar testes | `./mvnw clean verify` em cada aplicação (job em matriz) |
+| | Publicar resultados dos testes | Relatórios JUnit na aba *Tests* da execução |
+| | Preparar e publicar artefato | `app.jar` de cada aplicação publicado no Azure DevOps |
+| **CD** | Baixar artefato | Usa o artefato gerado pelo CI da mesma execução |
+| | Publicar no Web App | `AzureWebApp@1` publica o `.jar` e aplica as configurações |
 
-1. **RabbitMQ:** crie uma instância gratuita (*Little Lemur*) em [cloudamqp.com](https://www.cloudamqp.com) e copie a **AMQP URL** (`amqps://...`).
-2. **Render:** em *New → Blueprint*, conecte este repositório. O [`render.yaml`](render.yaml) cria os dois Web Services (`vetpet-notificacao` e `vetpet-api`), cada um a partir da sua pasta.
-3. Preencha as variáveis marcadas como `sync: false`:
-   - nos dois serviços: `RABBITMQ_URL` (URL do CloudAMQP) e `NOTIFICACAO_API_KEY` (a mesma chave nos dois);
-   - no `vetpet-notificacao`: `MAIL_USERNAME` e `MAIL_PASSWORD`;
-   - no `vetpet-api`: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `VETPET_ADMIN_EMAIL`, `VETPET_ADMIN_SENHA` e `NOTIFICACAO_URL` (URL pública do `vetpet-notificacao`).
-4. Os *health checks* usam `/actuator/health/liveness`.
-5. No primeiro start, `SEED_HABILITADO=true` cria os dados de demonstração (somente se as tabelas estiverem vazias).
+- O CI dispara a cada alteração na branch **`master`**. O CD só roda depois que o CI gera os artefatos com sucesso.
+- O microsserviço de notificação é publicado antes da API, que depende dele.
+- Usuários, senhas e tokens ficam como **variáveis secretas** no grupo `vetpet-segredos` do Azure DevOps. Nada sensível fica no repositório.
 
-> O banco precisa estar acessível pela internet. Um Oracle instalado no seu computador não é alcançável pelo Render, então em produção use o Oracle da FIAP ou outro banco em nuvem.
->
-> No plano gratuito os serviços "dormem" após 15 minutos sem acesso. Abra a aplicação **alguns minutos antes da apresentação**.
+### Como reproduzir
+
+O passo a passo completo, do portal da Azure até a primeira execução da pipeline, está em [`docs/azure/PASSO-A-PASSO.md`](docs/azure/PASSO-A-PASSO.md). Em resumo:
+
+1. No **Azure Cloud Shell** (Bash), crie os recursos com o script [`scripts/azure/criar-recursos.sh`](scripts/azure/criar-recursos.sh).
+2. Crie a instância gratuita do RabbitMQ no CloudAMQP.
+3. No Azure DevOps, crie a conexão com a assinatura (`vetpet-azure`), o grupo de variáveis `vetpet-segredos` e a pipeline a partir do `azure-pipelines.yml`.
+4. Faça um push na `master` e acompanhe o CI e o CD.
+
+Para remover tudo depois da avaliação: [`scripts/azure/excluir-recursos.sh`](scripts/azure/excluir-recursos.sh).
 
 ### Práticas de DevOps aplicadas
 
-- Dockerfile **multi-stage** em cada aplicação (JDK para build, JRE para execução), cache das dependências Maven e execução com **usuário sem privilégios**.
-- Configuração externa por variáveis de ambiente (12-factor). Nenhum segredo no repositório.
-- `docker-compose` de infraestrutura com *healthcheck* e volume persistente do RabbitMQ.
-- Actuator com *liveness/readiness probes*.
-- Pipeline de CI em matriz, testando as duas aplicações e validando o build das imagens.
+- CI/CD com estágios separados, artefato versionado por execução e testes obrigatórios antes do deploy.
+- Configuração externa por variáveis de ambiente (12-factor) e segredos protegidos na pipeline.
+- Infraestrutura criada por **Azure CLI** (scripts versionados).
+- Actuator com *liveness/readiness probes* (`/actuator/health/liveness`).
+- Dockerfile **multi-stage** e `docker-compose` para o ambiente local.
 
 ---
 
@@ -671,12 +691,13 @@ Duração máxima de 15 minutos, com todos os integrantes participando.
 │   ├── Dockerfile
 │   ├── local.properties.example   Modelo do Gmail e senha de app
 │   └── pom.xml
+├── scripts/azure/                 Criação dos recursos na Azure (Azure CLI)
 ├── docs/
+│   ├── azure/                     Passo a passo do Azure DevOps e da Azure
 │   ├── sql/                       DDL Oracle, DDL SQL Server (Azure) e consultas gerenciais
 │   └── img/                       Imagens de apoio
 ├── azure-pipelines.yml           Pipeline CI/CD do Azure DevOps (as duas aplicações)
 ├── docker-compose.yml             Infraestrutura local (RabbitMQ)
-├── render.yaml                    Deploy das duas aplicações no Render
 └── README.md
 ```
 

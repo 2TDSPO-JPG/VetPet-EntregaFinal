@@ -8,9 +8,20 @@ pr: none
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  - group: vetpet-segredos
+  - name: conexaoAzure
+    value: vetpet-azure
+  - name: grupoRecursos
+    value: rg-vetpet
+  - name: appApi
+    value: vetpet-api-rm565824
+  - name: appNotificacao
+    value: vetpet-notificacao-rm565824
+
 stages:
   - stage: CI
-    displayName: Build, testes e artefatos
+    displayName: CI - build, testes e artefatos
     jobs:
       - job: Build
         displayName: Build
@@ -39,15 +50,75 @@ stages:
               testRunTitle: Testes $(projeto)
               failTaskOnFailedTests: true
 
-          - task: CopyFiles@2
-            displayName: Separar o .jar
-            inputs:
-              SourceFolder: $(projeto)/target
-              Contents: '*.jar'
-              TargetFolder: $(Build.ArtifactStagingDirectory)/$(projeto)
+          - script: |
+              mkdir -p "$(Build.ArtifactStagingDirectory)/$(projeto)"
+              cp "$(ls $(projeto)/target/*.jar | head -n 1)" "$(Build.ArtifactStagingDirectory)/$(projeto)/app.jar"
+            displayName: Preparar o artefato
 
           - task: PublishPipelineArtifact@1
             displayName: Publicar artefato
             inputs:
               targetPath: $(Build.ArtifactStagingDirectory)/$(projeto)
               artifact: $(projeto)
+
+  - stage: CD
+    displayName: CD - deploy no Azure App Service
+    dependsOn: CI
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    jobs:
+      - job: DeployNotificacao
+        displayName: Deploy vetpet-notificacao
+        steps:
+          - checkout: none
+
+          - download: current
+            artifact: vetpet-notificacao
+            displayName: Baixar artefato
+
+          - task: AzureWebApp@1
+            displayName: Publicar no Web App
+            inputs:
+              azureSubscription: $(conexaoAzure)
+              appType: webAppLinux
+              appName: $(appNotificacao)
+              resourceGroupName: $(grupoRecursos)
+              package: $(Pipeline.Workspace)/vetpet-notificacao/app.jar
+              runtimeStack: JAVA|21-java21
+              startUpCommand: java -jar /home/site/wwwroot/app.jar --server.port=80
+              appSettings: >-
+                -NOTIFICACAO_DB_URL "$(DB_URL)"
+                -NOTIFICACAO_DB_USERNAME "$(DB_USERNAME)"
+                -NOTIFICACAO_DB_PASSWORD "$(DB_PASSWORD)"
+                -RABBITMQ_URL "$(RABBITMQ_URL)"
+                -NOTIFICACAO_API_KEY "$(NOTIFICACAO_API_KEY)"
+                -MAIL_USERNAME "$(MAIL_USERNAME)"
+                -MAIL_PASSWORD "$(MAIL_PASSWORD)"
+
+      - job: DeployApi
+        displayName: Deploy vetpet-api
+        dependsOn: DeployNotificacao
+        steps:
+          - checkout: none
+
+          - download: current
+            artifact: vetpet-api
+            displayName: Baixar artefato
+
+          - task: AzureWebApp@1
+            displayName: Publicar no Web App
+            inputs:
+              azureSubscription: $(conexaoAzure)
+              appType: webAppLinux
+              appName: $(appApi)
+              resourceGroupName: $(grupoRecursos)
+              package: $(Pipeline.Workspace)/vetpet-api/app.jar
+              runtimeStack: JAVA|21-java21
+              startUpCommand: java -jar /home/site/wwwroot/app.jar --server.port=80
+              appSettings: >-
+                -SPRING_PROFILES_ACTIVE prod
+                -DB_URL "$(DB_URL)"
+                -DB_USERNAME "$(DB_USERNAME)"
+                -DB_PASSWORD "$(DB_PASSWORD)"
+                -RABBITMQ_URL "$(RABBITMQ_URL)"
+                -NOTIFICACAO_API_KEY "$(NOTIFICACAO_API_KEY)"
+                -VETPET_ADMIN_SENHA "$(VETPET_ADMIN_SENHA)"
