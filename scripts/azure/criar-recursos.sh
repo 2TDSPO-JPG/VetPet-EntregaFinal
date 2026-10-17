@@ -78,6 +78,7 @@ az webapp config appsettings set \
   --name "$APP_API" \
   --settings \
     SPRING_PROFILES_ACTIVE=prod \
+    WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
     SEED_HABILITADO=true \
     VETPET_ADMIN_EMAIL=admin@vetpet.com \
     NOTIFICACAO_URL="https://${APP_NOTIFICACAO}.azurewebsites.net"
@@ -86,6 +87,7 @@ az webapp config appsettings set \
   --resource-group "$GRUPO" \
   --name "$APP_NOTIFICACAO" \
   --settings \
+    WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
     MAIL_HOST=smtp.gmail.com \
     MAIL_PORT=587
 
