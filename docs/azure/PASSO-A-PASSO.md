@@ -1,9 +1,19 @@
 # Passo a passo: Azure + Azure DevOps
 
-Guia para colocar o VetPet no ar com CI/CD. Siga na ordem. Cada etapa diz onde clicar e o que copiar para as próximas.
+Como colocar o VetPet no ar com CI/CD, do zero. As etapas seguem a ordem em que dependem uma da outra.
 
-| Etapa | Onde | Tempo |
-|---|---|---|
+| Etapa | Onde |
+|---|---|
+| 0. Liberar a execução gratuita de pipelines | Formulário da Microsoft |
+| 1. Criar os recursos na Azure | Azure Cloud Shell |
+| 2. Criar o RabbitMQ | CloudAMQP |
+| 3. Criar o projeto no Azure DevOps | dev.azure.com |
+| 4. Conectar a Azure ao Azure DevOps | Project settings |
+| 5. Cadastrar os segredos | Pipelines → Library |
+| 6. Criar a pipeline | Pipelines |
+| 7. Conferir o CRUD no banco | Portal da Azure |
+
+---|---|---|
 | 0. Pedir execução gratuita de pipelines | Formulário da Microsoft | 5 min (aprovação em até 3 dias úteis) |
 | 1. Criar os recursos na Azure | Portal da Azure (Cloud Shell) | 15 min |
 | 2. Criar o RabbitMQ | CloudAMQP | 5 min |
@@ -15,7 +25,7 @@ Guia para colocar o VetPet no ar com CI/CD. Siga na ordem. Cada etapa diz onde c
 
 ---
 
-## 0. Pedir a execução gratuita de pipelines (faça hoje)
+## 0. Liberar a execução gratuita de pipelines
 
 Organizações novas do Azure DevOps não podem executar pipelines nos agentes da Microsoft até a liberação gratuita ser aprovada.
 
@@ -49,7 +59,7 @@ O script cria o grupo `rg-vetpet`, o servidor e o banco Azure SQL, o plano Linux
 > Se o banco gratuito não estiver disponível na assinatura, troque no script as linhas do `az sql db create` por `--service-objective Basic`.
 > Os nomes precisam ser únicos na Azure. Se algum já existir, rode `SUFIXO=outronome ./criar-recursos.sh` e troque o sufixo também no `azure-pipelines.yml`.
 
-### Liberar o seu computador no banco (para o vídeo)
+### Liberar o seu computador no firewall do banco
 
 Para rodar `SELECT` pelo **Editor de consultas** do portal ou pelo Azure Data Studio, o seu IP precisa estar liberado:
 
@@ -83,17 +93,15 @@ Clique em **+ New project** e preencha exatamente:
 | Campo | Valor |
 |---|---|
 | Project name | `Sprint 4 – Azure DevOps` |
-| Description | `Projeto para entrega da Sprint 4 do professor <NOME DO PROFESSOR>`, e embaixo uma linha por integrante: `RM565824 - Pedro Ferreira - <TURMA>`, `RM563234 - Jonas Santos - <TURMA>`, `RM561995 - Gabriel Muller - <TURMA>` |
+| Description | Uma linha por integrante, no formato `RM - Nome - Turma` |
 | Visibility | **Private** |
 | Advanced → Version control | **Git** |
 | Advanced → Work item process | **Scrum** (ou Agile) |
 
-### 3.3 Convidar o professor e o grupo
-
-Sem este passo, a nota é zero.
+### 3.3 Convidar os membros
 
 1. *Organization settings* (canto inferior esquerdo) → **Users** → **Add users**.
-2. E-mail do professor, **Access level: Basic**, projeto **Sprint 4 – Azure DevOps**, grupo **Project Contributors**.
+2. E-mail do membro, **Access level: Basic**, projeto **Sprint 4 – Azure DevOps**, grupo **Project Contributors**.
 3. Repita para o Jonas e o Gabriel.
 
 ---
@@ -160,7 +168,7 @@ Se a aplicação não abrir: portal → Web App → **Log stream** mostra o log 
 
 ---
 
-## 7. Evidências de CRUD no banco (vídeo)
+## 7. Conferir o CRUD no banco
 
 No portal: **SQL databases** → `vetpet` → **Query editor** → entre com `clyvoadmin` e a senha.
 
@@ -185,20 +193,8 @@ ORDER BY p.id DESC;
 
 ---
 
-## Roteiro do vídeo de DevOps
+## Remover os recursos
 
-Mínimo 720p, explicação por voz, sem legendas. Deixe tudo aberto antes de gravar: IntelliJ, Azure DevOps (pipeline), portal da Azure (Web Apps e Query editor) e a aplicação.
-
-1. Mostrar as ferramentas abertas e explicar a arquitetura (diagrama do README).
-2. Mostrar a configuração da pipeline: o `azure-pipelines.yml`, os estágios CI e CD e cada tarefa, a conexão `vetpet-azure` e o grupo `vetpet-segredos` com os cadeados.
-3. **Alterar código**, não o README. Exemplo: o título do painel em `vetpet-api/src/main/resources/templates/fragments/layout.html`.
-4. Commit e push na `master`, e mostrar a pipeline iniciando sozinha.
-5. Abrir a execução e explicar cada etapa enquanto roda (compilar e testar, resultados dos testes, artefato, deploy).
-6. Mostrar o artefato publicado e a aba **Tests**.
-7. No portal da Azure, mostrar os Web Apps atualizados (*Deployment Center* ou *Overview*).
-8. Abrir a aplicação e mostrar a alteração no ar.
-9. Fazer o CRUD da seção 7, com um `SELECT` depois de cada operação.
-
-## Custos
-
-O plano B1 é cobrado por hora, cerca de US$ 13 por mês, descontado dos créditos de estudante. O Azure SQL gratuito e o CloudAMQP Little Lemur não têm custo. Depois da nota, rode `./excluir-recursos.sh` para apagar tudo.
+```bash
+./excluir-recursos.sh
+```

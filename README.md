@@ -32,8 +32,7 @@ O VetPet transforma cada cadastro, agendamento, prontuário e dúvida de tutor e
 14. [Integração multidisciplinar](#integração-multidisciplinar)
 15. [Boas práticas aplicadas](#boas-práticas-aplicadas)
 16. [Evolução desde as sprints anteriores](#evolução-desde-as-sprints-anteriores)
-17. [Roteiro do vídeo](#roteiro-do-vídeo)
-18. [Organização do repositório](#organização-do-repositório)
+17. [Organização do repositório](#organização-do-repositório)
 
 ---
 
@@ -536,6 +535,10 @@ Para rodar a API **sem RabbitMQ**, defina `MENSAGERIA_HABILITADA=false`. A linha
 
 A solução roda na **Azure** com serviços gerenciados (PaaS), e o CI/CD é feito no **Azure DevOps**.
 
+![Arquitetura da solução e esteira CI/CD](docs/img/arquitetura-vetpet.png)
+
+> Os números em vermelho mostram a ordem da esteira CI/CD, do commit até o deploy.
+
 | Recurso | Nome | Função |
 |---|---|---|
 | Grupo de recursos | `rg-vetpet` | Agrupa todos os recursos |
@@ -582,7 +585,7 @@ O passo a passo completo, do portal da Azure até a primeira execução da pipel
 3. No Azure DevOps, crie a conexão com a assinatura (`vetpet-azure`), o grupo de variáveis `vetpet-segredos` e a pipeline a partir do `azure-pipelines.yml`.
 4. Faça um push na `master` e acompanhe o CI e o CD.
 
-Para remover tudo depois da avaliação: [`scripts/azure/excluir-recursos.sh`](scripts/azure/excluir-recursos.sh).
+Para remover os recursos: [`scripts/azure/excluir-recursos.sh`](scripts/azure/excluir-recursos.sh).
 
 ### Práticas de DevOps aplicadas
 
@@ -658,22 +661,6 @@ Os testes usam H2 e mensageria desligada, então rodam sem Oracle e sem RabbitMQ
 | Um teste que dependia do Oracle | Testes de unidade e integração independentes de infraestrutura |
 
 > **Atenção para o front-end externo:** as rotas da API mudaram para `/api/v1/...`. Consulte o Swagger para os novos caminhos.
-
----
-
-## Roteiro do vídeo
-
-Duração máxima de 15 minutos, com todos os integrantes participando.
-
-| Tempo | Quem | Conteúdo |
-|---|---|---|
-| 0:00 a 1:30 | Pedro | Apresentação da equipe, desafio da empresa parceira e proposta do VetPet |
-| 1:30 a 3:30 | Pedro | Arquitetura, RabbitMQ (exchange, filas, DLQ) e microsserviço de notificação |
-| 3:30 a 7:30 | Gabriel | Demonstração no ar: login, dashboard, cadastro de tutor e pet com dois tutores, agendamento |
-| 7:30 a 10:00 | Jonas | Ficha do pet: registrar prontuário, linha da vida sendo atualizada, responder pergunta, tela de notificações e painel do RabbitMQ |
-| 10:00 a 12:00 | Jonas | Swagger: portal do tutor (`/api/v1/me`), erro padronizado, regras de negócio |
-| 12:00 a 13:45 | Gabriel | Cloud/DevOps: Dockerfile, docker-compose, Azure DevOps (pipeline CI/CD), Azure e CloudAMQP |
-| 13:45 a 15:00 | Todos | Integração multidisciplinar, aprendizados e próximos passos |
 
 ---
 
