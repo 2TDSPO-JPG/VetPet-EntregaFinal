@@ -8,8 +8,9 @@ O VetPet transforma cada cadastro, agendamento, prontuário e dúvida de tutor e
 |---|---|
 | **Aplicação online** | https://vetpet-api-rm565824.azurewebsites.net |
 | **Documentação da API (Swagger)** | https://vetpet-api-rm565824.azurewebsites.net/swagger-ui.html |
-| **Projeto no Azure DevOps** | `adicione aqui o link do projeto` |
-| **Vídeo da apresentação** | `adicione aqui o link do YouTube` |
+| **Projeto no Azure DevOps** | https://dev.azure.com/VetPet/Sprint%204%20%E2%80%93%20Azure%20DevOps |
+| **Vídeo DevOps (CI/CD na Azure)** | https://youtu.be/78HX-WVhodQ |
+| **Vídeo Java (apresentação da solução)** | `adicione aqui o link do YouTube` |
 | **Disciplinas integradas** | Java Advanced + Cloud / DevOps |
 
 ---
