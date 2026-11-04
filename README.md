@@ -627,13 +627,8 @@ Os testes usam H2 e mensageria desligada, então rodam sem Oracle e sem RabbitMQ
 | Disciplina | Como foi aplicada | Evidências |
 |---|---|---|
 | **Java Advanced** | Spring Boot em camadas, JPA, Bean Validation, Security, Thymeleaf, RabbitMQ, testes | Este repositório, Swagger, testes |
-| **Cloud / DevOps** | Docker multi-stage, Docker Compose, pipeline CI/CD no Azure DevOps, RabbitMQ gerenciado (CloudAMQP), health checks, configuração por ambiente | `vetpet-api/Dockerfile`, `vetpet-notificacao/Dockerfile`, `docker-compose.yml`, `azure-pipelines.yml` |
-| **Banco de dados** | Modelo relacional normalizado no Oracle, scripts DDL e consultas gerenciais | `docs/sql/` |
-| **Mobile** | O que o app faz e como usa a API | link do repositório ou do app |
-| **Banco de Dados** | Modelagem, procedures/pacotes, MongoDB | link ou pasta |
-| **IA (Disruptive Architectures)** | Qual solução de IA foi feita | link do vídeo
-ou repositório |
-| **QA (Compliance & Tests)** | Plano de testes no Azure Boards e automação | link |
+| **Cloud / DevOps** | Pipeline CI/CD no Azure DevOps, deploy no Azure App Service, banco Azure SQL, recursos criados por Azure CLI, segredos protegidos, RabbitMQ gerenciado (CloudAMQP) | `azure-pipelines.yml`, `scripts/azure/`, `docs/azure/`, diagrama em `docs/img/` |
+| **Banco de dados** | Modelo relacional normalizado, DDL para Oracle e Azure SQL e consultas gerenciais | `docs/sql/` |
 
 ---
 
