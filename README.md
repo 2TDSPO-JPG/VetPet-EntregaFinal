@@ -43,7 +43,7 @@ O VetPet transforma cada cadastro, agendamento, prontuário e dúvida de tutor e
 |---|---|---|
 | Pedro Ferreira | RM565824 | Arquitetura, mensageria (RabbitMQ), microsserviço de notificação |
 | Jonas Santos | RM563234 | Domínio, regras de negócio, API REST, testes |
-| Gabriel Muller | RM561995 | Front-end Thymeleaf, UX, Docker, CI/CD e deploy |
+| Gabriel Lourenço Muller | RM561995 | Front-end Thymeleaf, UX, Docker, CI/CD e deploy |
 
 ---
 
@@ -64,11 +64,11 @@ O VetPet centraliza **pets, tutores, veterinários, atendimentos, prontuários e
 |---|---|
 | **Linha da vida do pet** | Todo evento relevante (cadastro, agendamento, cancelamento, prontuário, dúvida) é publicado no RabbitMQ e registrado em ordem cronológica na ficha do pet. |
 | **Indicador de saúde** | Cada pet recebe um status: *Acompanhamento em dia*, *Check-up atrasado* (mais de 12 meses sem atendimento) ou *Sem atendimentos*. |
-| **Vários tutores por pet** | Todos os responsáveis vinculados recebem as notificações. |
+| **Vários tutores por pet** | Até 5 responsáveis por pet, e todos recebem as notificações. |
 | **Atendimento → prontuário** | Um atendimento só é concluído quando o veterinário registra o prontuário. O peso aferido atualiza a ficha do pet. |
 | **Lembretes automáticos** | Um agendador publica `exame.lembrete` 24 h antes de cada atendimento. |
 | **Perguntas e respostas** | O tutor envia dúvidas pelo app (rota `/api/v1/me`) e a equipe responde pelo painel. A resposta gera uma notificação. |
-| **Microsserviço de notificações** | Consome os eventos, garante idempotência e registra os avisos (e-mail simulado ou painel da clínica). |
+| **Microsserviço de notificações** | Consome os eventos, garante idempotência, envia e-mail real aos tutores pelo Gmail e registra o histórico de avisos. |
 
 **Originalidade:** em vez de um CRUD isolado, o sistema trata a saúde do pet como uma **história contínua orientada a eventos**. A mesma mensagem que alimenta a linha da vida também dispara a notificação ao tutor, sem acoplamento entre os serviços.
 
@@ -108,8 +108,8 @@ flowchart LR
         NRest[GET /api/notificacoes<br/>X-API-KEY]
     end
 
-    DB[(Oracle FIAP<br/>ou H2 local)]
-    NDB[(H2 do serviço<br/>de notificação)]
+    DB[(Azure SQL na nuvem<br/>Oracle ou H2 local)]
+    NDB[(Azure SQL na nuvem<br/>H2 local)]
 
     Equipe --> Web
     AppTutor --> Rest
@@ -270,7 +270,7 @@ Sem essas variáveis o envio fica **simulado** (aparece no log e na tela de noti
 | Java 21 | Linguagem | LTS, records, `getFirst()`, pattern matching |
 | Spring Boot 4.0 | Base dos dois serviços | Padrão de mercado, autoconfiguração e actuator |
 | Spring Data JPA + Hibernate | Persistência | Repositórios declarativos e consultas JPQL com filtros opcionais |
-| Oracle (FIAP) / H2 | Banco | Oracle como banco oficial (perfil `oracle`). H2 em arquivo para desenvolvimento local e em memória nos testes |
+| Azure SQL / Oracle / H2 | Banco | Azure SQL na nuvem (perfil `prod`), Oracle FIAP para a disciplina de banco de dados (perfil `oracle`) e H2 no desenvolvimento local e nos testes |
 | Spring Security + BCrypt | Autenticação | Senhas com hash, perfis ADMIN/VETERINARIO/TUTOR, CSRF nos formulários |
 | Spring AMQP + RabbitMQ | Mensageria | Desacopla a API do serviço de notificação e prepara a arquitetura de microsserviços |
 | Thymeleaf | Painel da clínica | Renderização no servidor, integração nativa com Spring MVC e validação |
@@ -278,7 +278,7 @@ Sem essas variáveis o envio fica **simulado** (aparece no log e na tela de noti
 | springdoc-openapi | Swagger UI | Documentação viva e testável da API |
 | Lombok | Menos código repetitivo | Getters, setters e construtores nos DTOs e entidades |
 | JUnit 5 + Mockito + MockMvc | Testes | Testes de unidade nos services e de integração em API e telas |
-| Docker + Docker Compose | Containers | Mesmo ambiente local e em nuvem. Sobe API, notificação e RabbitMQ com um comando |
+| Docker + Docker Compose | Ambiente local | O `docker-compose` sobe o RabbitMQ para desenvolvimento, e cada aplicação tem um Dockerfile multi-stage |
 | Azure DevOps (Azure Pipelines) | CI/CD | Compila, testa e publica o artefato de cada serviço a cada push na branch `master` |
 | Azure App Service + Azure SQL | Deploy e banco em nuvem | Plataforma gerenciada (PaaS) para Java 21 e banco SQL Server gerenciado, sem administrar servidores |
 | CloudAMQP | RabbitMQ gerenciado | Plano gratuito, acessível pelos dois Web Apps |
@@ -422,7 +422,7 @@ A API funciona com dois bancos, escolhidos pelo perfil do Spring, sem alterar c�
 | Perfil | Banco | Quando usar |
 |---|---|---|
 | *(padrão)* | **H2 em arquivo** (`vetpet-api/data/`) | Desenvolvimento local. Não precisa de instalação nem credenciais, e os dados ficam salvos entre as execuções |
-| `oracle` | **Oracle FIAP** | Banco oficial do projeto e da disciplina de banco de dados |
+| `oracle` | **Oracle FIAP** | Banco usado na disciplina de banco de dados |
 | `prod` | **Azure SQL** (definido por `DB_URL`) | Deploy na Azure |
 
 As tabelas (prefixo `VP_`) são criadas e atualizadas pelo Hibernate (`ddl-auto=update`). Para usar o Oracle no IntelliJ, abra *Run → Edit Configurations*, preencha **Active profiles** com `oracle` e defina `DB_USERNAME` e `DB_PASSWORD` nas variáveis de ambiente (ou no `vetpet-api/local.properties`). Para apagar os dados locais, basta excluir a pasta `vetpet-api/data/`.
@@ -511,6 +511,8 @@ Para rodar a API **sem RabbitMQ**, defina `MENSAGERIA_HABILITADA=false`. A linha
 | Veterinário | carlos@vetpet.com | vet12345 |
 | Tutora (API `/api/v1/me`) | mariana@example.com | tutor123 |
 | Tutor com e-mail real (recebe os avisos) | pedroferreira.gomes03@gmail.com | tutor123 |
+
+Na aplicação online, as contas de veterinário e de tutor funcionam com as mesmas senhas. A senha do administrador online é diferente, porque vem do grupo de segredos da pipeline.
 
 ### Variáveis de ambiente
 
