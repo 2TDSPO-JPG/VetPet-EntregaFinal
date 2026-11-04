@@ -31,6 +31,7 @@ import java.util.Set;
 public class PetService {
 
     private static final String RECURSO = "Pet";
+    static final int LIMITE_TUTORES = 5;
 
     private final PetRepository petRepository;
     private final TutorRepository tutorRepository;
@@ -107,6 +108,7 @@ public class PetService {
         if (pet.getTutores().contains(tutor)) {
             throw new RegraNegocioException(tutor.getNome() + " já é tutor(a) de " + pet.getNome() + ".");
         }
+        validarLimiteDeTutores(pet.getTutores().size() + 1);
         pet.adicionarTutor(tutor);
         publicarVinculo(pet, tutor);
         return PetResponse.de(pet);
@@ -147,8 +149,15 @@ public class PetService {
         pet.setAlergias(DadosPessoais.vazioParaNulo(request.getAlergias()));
     }
 
+    private void validarLimiteDeTutores(int quantidade) {
+        if (quantidade > LIMITE_TUTORES) {
+            throw new RegraNegocioException("Um pet pode ter no máximo " + LIMITE_TUTORES + " tutores.");
+        }
+    }
+
     private Set<Tutor> carregarTutores(List<Long> ids) {
         Set<Long> idsUnicos = new HashSet<>(ids);
+        validarLimiteDeTutores(idsUnicos.size());
         List<Tutor> tutores = tutorRepository.findAllById(idsUnicos);
         if (tutores.size() != idsUnicos.size()) {
             Set<Long> encontrados = new HashSet<>(tutores.stream().map(Tutor::getId).toList());

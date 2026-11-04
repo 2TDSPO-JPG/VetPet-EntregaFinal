@@ -84,6 +84,31 @@ class PetServiceTest {
     }
 
     @Test
+    void naoDeveCadastrarPetComMaisDeCincoTutores() {
+        assertThatThrownBy(() -> petService.cadastrar(requisicao(List.of(1L, 2L, 3L, 4L, 5L, 6L))))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("no máximo 5 tutores");
+    }
+
+    @Test
+    void naoDeveVincularSextoTutorAoPet() {
+        Pet pet = new Pet();
+        pet.setId(10L);
+        pet.setNome("Thor");
+        for (long id = 1; id <= 5; id++) {
+            pet.adicionarTutor(tutor(id, "Tutor" + id));
+        }
+        Tutor sexto = tutor(6L, "Sexto");
+        when(petRepository.findById(10L)).thenReturn(Optional.of(pet));
+        when(tutorRepository.findById(6L)).thenReturn(Optional.of(sexto));
+
+        assertThatThrownBy(() -> petService.vincularTutor(10L, 6L))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("no máximo 5 tutores");
+        assertThat(pet.getTutores()).hasSize(5);
+    }
+
+    @Test
     void deveCalcularIdadePelaDataDeNascimento() {
         Pet pet = new Pet();
         pet.setDataNascimento(LocalDate.now().minusYears(3).minusDays(1));

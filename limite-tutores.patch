@@ -1,0 +1,72 @@
+diff --git a/vetpet-api/src/main/java/br/com/fiap/vetpet/service/PetService.java b/vetpet-api/src/main/java/br/com/fiap/vetpet/service/PetService.java
+index 5af904f..da13e7a 100644
+--- a/vetpet-api/src/main/java/br/com/fiap/vetpet/service/PetService.java
++++ b/vetpet-api/src/main/java/br/com/fiap/vetpet/service/PetService.java
+@@ -31,6 +31,7 @@ import java.util.Set;
+ public class PetService {
+ 
+     private static final String RECURSO = "Pet";
++    static final int LIMITE_TUTORES = 5;
+ 
+     private final PetRepository petRepository;
+     private final TutorRepository tutorRepository;
+@@ -107,6 +108,7 @@ public class PetService {
+         if (pet.getTutores().contains(tutor)) {
+             throw new RegraNegocioException(tutor.getNome() + " já é tutor(a) de " + pet.getNome() + ".");
+         }
++        validarLimiteDeTutores(pet.getTutores().size() + 1);
+         pet.adicionarTutor(tutor);
+         publicarVinculo(pet, tutor);
+         return PetResponse.de(pet);
+@@ -147,8 +149,15 @@ public class PetService {
+         pet.setAlergias(DadosPessoais.vazioParaNulo(request.getAlergias()));
+     }
+ 
++    private void validarLimiteDeTutores(int quantidade) {
++        if (quantidade > LIMITE_TUTORES) {
++            throw new RegraNegocioException("Um pet pode ter no máximo " + LIMITE_TUTORES + " tutores.");
++        }
++    }
++
+     private Set<Tutor> carregarTutores(List<Long> ids) {
+         Set<Long> idsUnicos = new HashSet<>(ids);
++        validarLimiteDeTutores(idsUnicos.size());
+         List<Tutor> tutores = tutorRepository.findAllById(idsUnicos);
+         if (tutores.size() != idsUnicos.size()) {
+             Set<Long> encontrados = new HashSet<>(tutores.stream().map(Tutor::getId).toList());
+diff --git a/vetpet-api/src/test/java/br/com/fiap/vetpet/service/PetServiceTest.java b/vetpet-api/src/test/java/br/com/fiap/vetpet/service/PetServiceTest.java
+index c8680d7..884cbbb 100644
+--- a/vetpet-api/src/test/java/br/com/fiap/vetpet/service/PetServiceTest.java
++++ b/vetpet-api/src/test/java/br/com/fiap/vetpet/service/PetServiceTest.java
+@@ -83,6 +83,31 @@ class PetServiceTest {
+         assertThat(pet.getTutores()).isEqualTo(Set.of(mariana));
+     }
+ 
++    @Test
++    void naoDeveCadastrarPetComMaisDeCincoTutores() {
++        assertThatThrownBy(() -> petService.cadastrar(requisicao(List.of(1L, 2L, 3L, 4L, 5L, 6L))))
++                .isInstanceOf(RegraNegocioException.class)
++                .hasMessageContaining("no máximo 5 tutores");
++    }
++
++    @Test
++    void naoDeveVincularSextoTutorAoPet() {
++        Pet pet = new Pet();
++        pet.setId(10L);
++        pet.setNome("Thor");
++        for (long id = 1; id <= 5; id++) {
++            pet.adicionarTutor(tutor(id, "Tutor" + id));
++        }
++        Tutor sexto = tutor(6L, "Sexto");
++        when(petRepository.findById(10L)).thenReturn(Optional.of(pet));
++        when(tutorRepository.findById(6L)).thenReturn(Optional.of(sexto));
++
++        assertThatThrownBy(() -> petService.vincularTutor(10L, 6L))
++                .isInstanceOf(RegraNegocioException.class)
++                .hasMessageContaining("no máximo 5 tutores");
++        assertThat(pet.getTutores()).hasSize(5);
++    }
++
+     @Test
+     void deveCalcularIdadePelaDataDeNascimento() {
+         Pet pet = new Pet();

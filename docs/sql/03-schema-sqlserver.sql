@@ -110,6 +110,18 @@ CREATE TABLE VP_EVENTO_PET (
     ocorrido_em  DATETIME2 NOT NULL
 );
 
+CREATE TABLE VP_NOTIFICACAO (
+    id             BIGINT IDENTITY(1,1) PRIMARY KEY,
+    evento_id      VARCHAR(36) NOT NULL UNIQUE,
+    tipo           VARCHAR(40) NOT NULL,
+    titulo         VARCHAR(150) NOT NULL,
+    mensagem       VARCHAR(1000),
+    pet_nome       VARCHAR(80),
+    destinatarios  VARCHAR(1000),
+    canal          VARCHAR(20) NOT NULL,
+    criada_em      DATETIME2 NOT NULL
+);
+
 CREATE INDEX IX_VP_EXAME_PET_DATA ON VP_EXAME (pet_id, data_hora);
 CREATE INDEX IX_VP_EXAME_VET_DATA ON VP_EXAME (veterinario_id, data_hora);
 CREATE INDEX IX_VP_EVENTO_PET_DATA ON VP_EVENTO_PET (pet_id, ocorrido_em);
